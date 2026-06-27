@@ -119,7 +119,7 @@ export default function WarehouseManager() {
             <h2 className={styles.dialogTitle}>{modal === 'create' ? 'New Warehouse' : 'Edit Warehouse'}</h2>
             <form onSubmit={handleSubmit}>
               <label className={styles.label}>
-                Code <span className={styles.required}>*</span>
+                <div>Code <span className={styles.required}>*</span></div>
                 <input className={styles.input} value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required placeholder="e.g. WH-001" />
               </label>
               <label className={styles.label}>

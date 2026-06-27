@@ -177,7 +177,7 @@ export default function CustomerManager() {
             </h2>
             <form onSubmit={handleSubmit}>
               <label className={styles.label}>
-                Code <span className={styles.required}>*</span>
+                <div>Code <span className={styles.required}>*</span></div>
                 <input
                   className={styles.input}
                   value={form.code}

@@ -240,7 +240,7 @@ export default function PriceManager() {
             </h2>
             <form onSubmit={handleSubmit}>
               <label className={styles.label}>
-                Item <span className={styles.required}>*</span>
+                <div>Item <span className={styles.required}>*</span></div>
                 <select
                   className={styles.input}
                   value={form.itemId}
@@ -257,7 +257,7 @@ export default function PriceManager() {
                 </select>
               </label>
               <label className={styles.label}>
-                Supplier <span className={styles.required}>*</span>
+                <div>Supplier <span className={styles.required}>*</span></div>
                 <select
                   className={styles.input}
                   value={form.supplierId}
@@ -289,7 +289,7 @@ export default function PriceManager() {
                 </select>
               </label>
               <label className={styles.label}>
-                Unit Price <span className={styles.required}>*</span>
+                <div>Unit Price <span className={styles.required}>*</span></div>
                 <input
                   className={styles.input}
                   type="number"

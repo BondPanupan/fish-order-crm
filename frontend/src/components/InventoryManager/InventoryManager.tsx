@@ -240,7 +240,7 @@ export default function InventoryManager() {
             </h2>
             <form onSubmit={handleSubmit}>
               <label className={styles.label}>
-                Item <span className={styles.required}>*</span>
+                <div>Item <span className={styles.required}>*</span></div>
                 <select
                   className={styles.input}
                   value={form.itemId}
@@ -257,7 +257,7 @@ export default function InventoryManager() {
                 </select>
               </label>
               <label className={styles.label}>
-                Supplier <span className={styles.required}>*</span>
+                <div>Supplier <span className={styles.required}>*</span></div>
                 <select
                   className={styles.input}
                   value={form.supplierId}
@@ -274,7 +274,7 @@ export default function InventoryManager() {
                 </select>
               </label>
               <label className={styles.label}>
-                Warehouse <span className={styles.required}>*</span>
+                <div>Warehouse <span className={styles.required}>*</span></div>
                 <select
                   className={styles.input}
                   value={form.warehouseId}
@@ -291,7 +291,7 @@ export default function InventoryManager() {
                 </select>
               </label>
               <label className={styles.label}>
-                Remaining Quantity <span className={styles.required}>*</span>
+                <div>Remaining Quantity <span className={styles.required}>*</span></div>
                 <input
                   className={styles.input}
                   type="number"

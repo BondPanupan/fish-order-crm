@@ -117,7 +117,7 @@ export default function ItemManager() {
             <h2 className={styles.dialogTitle}>{modal === 'create' ? 'New Item' : 'Edit Item'}</h2>
             <form onSubmit={handleSubmit}>
               <label className={styles.label}>
-                Code <span className={styles.required}>*</span>
+                <div>Code <span className={styles.required}>*</span></div>
                 <input className={styles.input} value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required placeholder="e.g. Item-1" />
               </label>
               <label className={styles.label}>

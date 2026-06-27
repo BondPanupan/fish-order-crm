@@ -313,7 +313,7 @@ export default function OrderManager() {
             <form onSubmit={handleSubmit}>
               <div className={styles.formRow}>
                 <label className={styles.label}>
-                  Order Code <span className={styles.required}>*</span>
+                  <div>Order Code <span className={styles.required}>*</span></div>
                   <input
                     className={styles.input}
                     value={form.code}
@@ -324,7 +324,7 @@ export default function OrderManager() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Customer <span className={styles.required}>*</span>
+                  <div>Customer <span className={styles.required}>*</span></div>
                   <select
                     className={styles.input}
                     value={form.customerId}
@@ -367,7 +367,7 @@ export default function OrderManager() {
                       </div>
                       <div className={styles.formRow}>
                         <label className={styles.label}>
-                          Item <span className={styles.required}>*</span>
+                          <div><div>Item <span className={styles.required}>*</span></div></div>
                           <select
                             className={styles.input}
                             value={line.itemId}
@@ -383,7 +383,7 @@ export default function OrderManager() {
                           </select>
                         </label>
                         <label className={styles.label}>
-                          Order Type <span className={styles.required}>*</span>
+                          <div>Order Type <span className={styles.required}>*</span></div>
                           <select
                             className={styles.input}
                             value={line.orderTypeId}
@@ -401,7 +401,7 @@ export default function OrderManager() {
                       </div>
                       <div className={styles.formRow}>
                         <label className={styles.label}>
-                          Warehouse <span className={styles.required}>*</span>
+                          <div>Warehouse <span className={styles.required}>*</span></div>
                           <select
                             className={styles.input}
                             value={line.warehouseId}
@@ -417,7 +417,7 @@ export default function OrderManager() {
                           </select>
                         </label>
                         <label className={styles.label}>
-                          Supplier <span className={styles.required}>*</span>
+                          <div>Supplier <span className={styles.required}>*</span></div>
                           <select
                             className={styles.input}
                             value={line.supplierId}
@@ -435,7 +435,7 @@ export default function OrderManager() {
                       </div>
                       <div className={styles.formRow}>
                         <label className={styles.label}>
-                          Quantity <span className={styles.required}>*</span>
+                          <div>Quantity <span className={styles.required}>*</span></div>
                           <input
                             className={styles.input}
                             type="number"
@@ -448,7 +448,7 @@ export default function OrderManager() {
                           />
                         </label>
                         <label className={styles.label}>
-                          Date <span className={styles.required}>*</span>
+                          <div>Date <span className={styles.required}>*</span></div>
                           <input
                             className={styles.input}
                             type="date"
