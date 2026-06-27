@@ -1,8 +1,6 @@
 .page {
   padding: 2rem;
   font-family: var(--font-geist-sans);
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .header {

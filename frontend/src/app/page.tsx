@@ -64,7 +64,7 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Fish Order CRM</h1>
+        <h1 className={styles.title}>Orders</h1>
       </div>
 
       <div className={styles.toolbar}>
