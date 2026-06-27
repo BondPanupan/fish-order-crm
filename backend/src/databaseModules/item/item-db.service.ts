@@ -15,13 +15,14 @@ export class ItemDbService {
 
   findAll() {
     return this.prisma.item.findMany({
+      where: { isDeleted: false },
       orderBy: { code: 'asc' },
-      select: { id: true, code: true, name: true, unit: true },
+      select: { id: true, code: true, name: true, unit: true, createdAt: true, updatedAt: true, createdBy: true, updatedBy: true },
     });
   }
 
   async findOne(id: string) {
-    const item = await this.prisma.item.findUnique({ where: { id } });
+    const item = await this.prisma.item.findFirst({ where: { id, isDeleted: false } });
     if (!item) throw new NotFoundException(`Item ${id} not found`);
     return item;
   }
@@ -40,6 +41,9 @@ export class ItemDbService {
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.item.delete({ where: { id } });
+    return this.prisma.item.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
   }
 }

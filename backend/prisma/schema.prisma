@@ -9,11 +9,15 @@ datasource db {
 // ---- Reference / master data ----------------------------------------
 
 model Customer {
-  id          String   @id @default(uuid()) @db.Uuid
-  code        String   @unique
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique
   name        String?
-  creditLimit Decimal  @default(0) @db.Decimal(14, 2) @map("credit_limit")
-  createdAt   DateTime @default(now()) @map("created_at")
+  creditLimit Decimal   @default(0) @db.Decimal(14, 2) @map("credit_limit")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  createdBy   String?   @map("created_by")
+  updatedBy   String?   @map("updated_by")
+  isDeleted   Boolean   @default(false) @map("is_deleted")
   orders      Order[]
 
   @@map("customers")
@@ -24,6 +28,11 @@ model Item {
   code      String      @unique
   name      String?
   unit      String      @default("kg")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  createdBy String?     @map("created_by")
+  updatedBy String?     @map("updated_by")
+  isDeleted Boolean     @default(false) @map("is_deleted")
   subOrders SubOrder[]
   prices    Price[]
   inventory Inventory[]
@@ -50,6 +59,10 @@ model Supplier {
   name       String?
   isWildcard Boolean     @default(false) @map("is_wildcard")
   createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  createdBy  String?     @map("created_by")
+  updatedBy  String?     @map("updated_by")
+  isDeleted  Boolean     @default(false) @map("is_deleted")
   subOrders  SubOrder[]
   prices     Price[]
   inventory  Inventory[]
@@ -63,6 +76,10 @@ model Warehouse {
   name       String?
   isWildcard Boolean     @default(false) @map("is_wildcard")
   createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  createdBy  String?     @map("created_by")
+  updatedBy  String?     @map("updated_by")
+  isDeleted  Boolean     @default(false) @map("is_deleted")
   subOrders  SubOrder[]
   inventory  Inventory[]
 
@@ -78,7 +95,11 @@ model Inventory {
   warehouseId       String       @db.Uuid @map("warehouse_id")
   itemId            String       @db.Uuid @map("item_id")
   remainingQuantity Decimal      @default(0) @db.Decimal(14, 2) @map("remaining_quantity")
-  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  createdBy         String?      @map("created_by")
+  updatedBy         String?      @map("updated_by")
+  isDeleted         Boolean      @default(false) @map("is_deleted")
   supplier          Supplier     @relation(fields: [supplierId], references: [id])
   warehouse         Warehouse    @relation(fields: [warehouseId], references: [id])
   item              Item         @relation(fields: [itemId], references: [id])

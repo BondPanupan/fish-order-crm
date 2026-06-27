@@ -15,13 +15,14 @@ export class SupplierDbService {
 
   findAll() {
     return this.prisma.supplier.findMany({
+      where: { isDeleted: false },
       orderBy: { code: 'asc' },
-      select: { id: true, code: true, name: true, isWildcard: true, createdAt: true },
+      select: { id: true, code: true, name: true, isWildcard: true, createdAt: true, updatedAt: true, createdBy: true, updatedBy: true },
     });
   }
 
   async findOne(id: string) {
-    const supplier = await this.prisma.supplier.findUnique({ where: { id } });
+    const supplier = await this.prisma.supplier.findFirst({ where: { id, isDeleted: false } });
     if (!supplier) throw new NotFoundException(`Supplier ${id} not found`);
     return supplier;
   }
@@ -40,6 +41,9 @@ export class SupplierDbService {
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.supplier.delete({ where: { id } });
+    return this.prisma.supplier.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
   }
 }

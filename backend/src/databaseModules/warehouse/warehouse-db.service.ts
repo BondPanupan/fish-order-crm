@@ -15,13 +15,14 @@ export class WarehouseDbService {
 
   findAll() {
     return this.prisma.warehouse.findMany({
+      where: { isDeleted: false },
       orderBy: { code: 'asc' },
-      select: { id: true, code: true, name: true, isWildcard: true, createdAt: true },
+      select: { id: true, code: true, name: true, isWildcard: true, createdAt: true, updatedAt: true, createdBy: true, updatedBy: true },
     });
   }
 
   async findOne(id: string) {
-    const warehouse = await this.prisma.warehouse.findUnique({ where: { id } });
+    const warehouse = await this.prisma.warehouse.findFirst({ where: { id, isDeleted: false } });
     if (!warehouse) throw new NotFoundException(`Warehouse ${id} not found`);
     return warehouse;
   }
@@ -40,6 +41,9 @@ export class WarehouseDbService {
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.warehouse.delete({ where: { id } });
+    return this.prisma.warehouse.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
   }
 }

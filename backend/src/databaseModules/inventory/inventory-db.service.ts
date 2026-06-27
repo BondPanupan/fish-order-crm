@@ -25,6 +25,7 @@ export class InventoryDbService {
 
   findAll() {
     return this.prisma.inventory.findMany({
+      where: { isDeleted: false },
       orderBy: [{ item: { code: 'asc' } }, { remainingQuantity: 'desc' }],
       include: {
         item: { select: { id: true, code: true, name: true, unit: true } },
@@ -35,8 +36,8 @@ export class InventoryDbService {
   }
 
   async findOne(id: string) {
-    const inv = await this.prisma.inventory.findUnique({
-      where: { id },
+    const inv = await this.prisma.inventory.findFirst({
+      where: { id, isDeleted: false },
       include: {
         item: { select: { id: true, code: true, name: true, unit: true } },
         supplier: { select: { id: true, code: true, name: true } },
@@ -67,6 +68,9 @@ export class InventoryDbService {
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.inventory.delete({ where: { id } });
+    return this.prisma.inventory.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
   }
 }
