@@ -5,6 +5,10 @@ import styles from './page.module.css';
 
 const menuItems = [
   { href: '/admin/customers', label: 'Customers', description: 'Manage customer records' },
+  { href: '/admin/inventory', label: 'Inventory / Stock', description: 'View and adjust stock levels' },
+  { href: '/admin/items', label: 'Items', description: 'Manage fish product catalogue' },
+  { href: '/admin/suppliers', label: 'Suppliers', description: 'Manage supplier master data' },
+  { href: '/admin/warehouses', label: 'Warehouses', description: 'Manage warehouse master data' },
 ];
 
 export default function AdminPage() {
