@@ -1,0 +1,167 @@
+# npx prisma generate --schema prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- Reference / master data ----------------------------------------
+
+model Customer {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String?
+  creditLimit Decimal  @default(0) @db.Decimal(14, 2)
+  createdAt   DateTime @default(now())
+  orders      Order[]
+
+  @@map("customers")
+}
+
+model Item {
+  id        String      @id @default(uuid()) @db.Uuid
+  code      String      @unique
+  name      String?
+  unit      String      @default("kg")
+  subOrders SubOrder[]
+  prices    Price[]
+  inventory Inventory[]
+
+  @@map("items")
+}
+
+// percentage = price-tier multiplier: EMERGENCY 125 / OVER_DUE 100 / DAILY 90
+model OrderType {
+  id         String     @id @default(uuid()) @db.Uuid
+  code       String     @unique
+  name       String?
+  priority   Int
+  percentage Decimal    @db.Decimal(6, 2)
+  subOrders  SubOrder[]
+  prices     Price[]
+
+  @@map("order_types")
+}
+
+model Supplier {
+  id         String      @id @default(uuid()) @db.Uuid
+  code       String      @unique
+  name       String?
+  isWildcard Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  subOrders  SubOrder[]
+  prices     Price[]
+  inventory  Inventory[]
+
+  @@map("suppliers")
+}
+
+model Warehouse {
+  id         String      @id @default(uuid()) @db.Uuid
+  code       String      @unique
+  name       String?
+  isWildcard Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  subOrders  SubOrder[]
+  inventory  Inventory[]
+
+  @@map("warehouses")
+}
+
+// ---- Stock & pricing ------------------------------------------------
+
+// Wildcard resolution (SP-000 / WH-000): pick rows ordered by remainingQuantity DESC
+model Inventory {
+  id                String       @id @default(uuid()) @db.Uuid
+  supplierId        String       @db.Uuid
+  warehouseId       String       @db.Uuid
+  itemId            String       @db.Uuid
+  remainingQuantity Decimal      @default(0) @db.Decimal(14, 2)
+  updatedAt         DateTime     @default(now()) @updatedAt
+  supplier          Supplier     @relation(fields: [supplierId], references: [id])
+  warehouse         Warehouse    @relation(fields: [warehouseId], references: [id])
+  item              Item         @relation(fields: [itemId], references: [id])
+  allocations       Allocation[]
+
+  @@unique([supplierId, warehouseId, itemId])
+  @@index([remainingQuantity])
+  @@map("inventory")
+}
+
+// orderTypeId NULL  = base price (× orderType.percentage at runtime)
+// orderTypeId !NULL = explicit override for that tier
+model Price {
+  id          String     @id @default(uuid()) @db.Uuid
+  itemId      String     @db.Uuid
+  supplierId  String     @db.Uuid
+  orderTypeId String?    @db.Uuid
+  unitPrice   Decimal    @db.Decimal(14, 2)
+  item        Item       @relation(fields: [itemId], references: [id])
+  supplier    Supplier   @relation(fields: [supplierId], references: [id])
+  orderType   OrderType? @relation(fields: [orderTypeId], references: [id])
+
+  @@map("prices")
+}
+
+// ---- Orders (header) & sub-orders (lines) ---------------------------
+
+model Order {
+  id         String     @id @default(uuid()) @db.Uuid
+  code       String     @unique
+  customerId String     @db.Uuid
+  remark     String?
+  createdAt  DateTime   @default(now())
+  customer   Customer   @relation(fields: [customerId], references: [id])
+  subOrders  SubOrder[]
+
+  @@map("orders")
+}
+
+// Each sub-order is one line: a specific item + type + source request under an order
+model SubOrder {
+  id              String       @id @default(uuid()) @db.Uuid
+  code            String       @unique
+  orderId         String       @db.Uuid
+  itemId          String       @db.Uuid
+  warehouseId     String       @db.Uuid
+  supplierId      String       @db.Uuid
+  requestQuantity Decimal      @db.Decimal(14, 2)
+  orderTypeId     String       @db.Uuid
+  createDate      DateTime     @db.Date
+  status          String       @default("pending")
+  order           Order        @relation(fields: [orderId], references: [id])
+  item            Item         @relation(fields: [itemId], references: [id])
+  warehouse       Warehouse    @relation(fields: [warehouseId], references: [id])
+  supplier        Supplier     @relation(fields: [supplierId], references: [id])
+  orderType       OrderType    @relation(fields: [orderTypeId], references: [id])
+  allocations     Allocation[]
+
+  @@index([orderId])
+  @@index([itemId])
+  @@index([orderTypeId])
+  @@index([createDate])
+  @@index([status])
+  @@index([code])
+  @@map("sub_orders")
+}
+
+// A sub-order can be filled from multiple inventory sources -> one sub_order : many rows
+model Allocation {
+  id                String    @id @default(uuid()) @db.Uuid
+  subOrderId        String    @db.Uuid
+  inventoryId       String    @db.Uuid
+  allocatedQuantity Decimal   @db.Decimal(14, 2)
+  unitPrice         Decimal   @db.Decimal(14, 2)
+  totalPrice        Decimal   @db.Decimal(14, 2)
+  method            String    @default("auto")
+  createdAt         DateTime  @default(now())
+  subOrder          SubOrder  @relation(fields: [subOrderId], references: [id])
+  inventory         Inventory @relation(fields: [inventoryId], references: [id])
+
+  @@index([subOrderId])
+  @@index([inventoryId])
+  @@map("allocations")
+}
