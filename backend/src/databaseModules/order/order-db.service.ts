@@ -34,7 +34,7 @@ export class OrderDbService {
         },
       },
       include: {
-        customer: { select: { id: true, code: true, name: true } },
+        customer: { select: { id: true, code: true, name: true, creditLimit: true } },
         subOrders: { include: SUB_ORDER_INCLUDE, orderBy: { code: 'asc' } },
       },
     });
