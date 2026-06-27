@@ -1,22 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import styles from './page.module.css';
+import styles from './CustomerManager.module.css';
+import type { Customer, CustomerFormState } from '@/types/customer';
+import {
+  fetchAllCustomers,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+} from '@/lib/api/customers/customers.api';
 
-type Customer = {
-  id: string;
-  code: string;
-  name: string | null;
-  creditLimit: string;
-  createdAt: string;
-  _count: { orders: number };
-};
-
-type FormState = { code: string; name: string; creditLimit: string };
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
-const emptyForm: FormState = { code: '', name: '', creditLimit: '' };
+const emptyForm: CustomerFormState = { code: '', name: '', creditLimit: '' };
 
 export default function CustomerManager() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -25,19 +19,17 @@ export default function CustomerManager() {
 
   const [modal, setModal] = useState<'create' | 'edit' | null>(null);
   const [editTarget, setEditTarget] = useState<Customer | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<CustomerFormState>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/customers`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setCustomers(await res.json());
+      setCustomers(await fetchAllCustomers());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -45,7 +37,7 @@ export default function CustomerManager() {
     }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { loadAll(); }, [loadAll]);
 
   function openCreate() {
     setForm(emptyForm);
@@ -70,24 +62,19 @@ export default function CustomerManager() {
     e.preventDefault();
     setSubmitting(true);
     setFormError(null);
-    const body = {
+    const dto = {
       code: form.code.trim(),
       ...(form.name.trim() && { name: form.name.trim() }),
       ...(form.creditLimit !== '' && { creditLimit: Number(form.creditLimit) }),
     };
     try {
-      const url = modal === 'edit' ? `${API}/customers/${editTarget!.id}` : `${API}/customers`;
-      const res = await fetch(url, {
-        method: modal === 'edit' ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message ?? `HTTP ${res.status}`);
+      if (modal === 'edit') {
+        await updateCustomer(editTarget!.id, dto);
+      } else {
+        await createCustomer(dto);
       }
       closeModal();
-      fetchAll();
+      loadAll();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -98,9 +85,8 @@ export default function CustomerManager() {
   async function handleDelete(id: string) {
     setDeletingId(id);
     try {
-      const res = await fetch(`${API}/customers/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      fetchAll();
+      await deleteCustomer(id);
+      loadAll();
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
     } finally {
@@ -120,7 +106,7 @@ export default function CustomerManager() {
       {error && (
         <div className={styles.errorBox}>
           <strong>Error:</strong> {error}
-          <button onClick={fetchAll} className={`${styles.btnSecondary} ${styles.errorRetry}`}>Retry</button>
+          <button onClick={loadAll} className={`${styles.btnSecondary} ${styles.errorRetry}`}>Retry</button>
         </div>
       )}
 
