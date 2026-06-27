@@ -1,5 +1,3 @@
-# npx prisma generate --schema prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,8 +12,8 @@ model Customer {
   id          String   @id @default(uuid()) @db.Uuid
   code        String   @unique
   name        String?
-  creditLimit Decimal  @default(0) @db.Decimal(14, 2)
-  createdAt   DateTime @default(now())
+  creditLimit Decimal  @default(0) @db.Decimal(14, 2) @map("credit_limit")
+  createdAt   DateTime @default(now()) @map("created_at")
   orders      Order[]
 
   @@map("customers")
@@ -50,8 +48,8 @@ model Supplier {
   id         String      @id @default(uuid()) @db.Uuid
   code       String      @unique
   name       String?
-  isWildcard Boolean     @default(false)
-  createdAt  DateTime    @default(now())
+  isWildcard Boolean     @default(false) @map("is_wildcard")
+  createdAt  DateTime    @default(now()) @map("created_at")
   subOrders  SubOrder[]
   prices     Price[]
   inventory  Inventory[]
@@ -63,8 +61,8 @@ model Warehouse {
   id         String      @id @default(uuid()) @db.Uuid
   code       String      @unique
   name       String?
-  isWildcard Boolean     @default(false)
-  createdAt  DateTime    @default(now())
+  isWildcard Boolean     @default(false) @map("is_wildcard")
+  createdAt  DateTime    @default(now()) @map("created_at")
   subOrders  SubOrder[]
   inventory  Inventory[]
 
@@ -76,11 +74,11 @@ model Warehouse {
 // Wildcard resolution (SP-000 / WH-000): pick rows ordered by remainingQuantity DESC
 model Inventory {
   id                String       @id @default(uuid()) @db.Uuid
-  supplierId        String       @db.Uuid
-  warehouseId       String       @db.Uuid
-  itemId            String       @db.Uuid
-  remainingQuantity Decimal      @default(0) @db.Decimal(14, 2)
-  updatedAt         DateTime     @default(now()) @updatedAt
+  supplierId        String       @db.Uuid @map("supplier_id")
+  warehouseId       String       @db.Uuid @map("warehouse_id")
+  itemId            String       @db.Uuid @map("item_id")
+  remainingQuantity Decimal      @default(0) @db.Decimal(14, 2) @map("remaining_quantity")
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at")
   supplier          Supplier     @relation(fields: [supplierId], references: [id])
   warehouse         Warehouse    @relation(fields: [warehouseId], references: [id])
   item              Item         @relation(fields: [itemId], references: [id])
@@ -95,10 +93,10 @@ model Inventory {
 // orderTypeId !NULL = explicit override for that tier
 model Price {
   id          String     @id @default(uuid()) @db.Uuid
-  itemId      String     @db.Uuid
-  supplierId  String     @db.Uuid
-  orderTypeId String?    @db.Uuid
-  unitPrice   Decimal    @db.Decimal(14, 2)
+  itemId      String     @db.Uuid @map("item_id")
+  supplierId  String     @db.Uuid @map("supplier_id")
+  orderTypeId String?    @db.Uuid @map("order_type_id")
+  unitPrice   Decimal    @db.Decimal(14, 2) @map("unit_price")
   item        Item       @relation(fields: [itemId], references: [id])
   supplier    Supplier   @relation(fields: [supplierId], references: [id])
   orderType   OrderType? @relation(fields: [orderTypeId], references: [id])
@@ -111,9 +109,9 @@ model Price {
 model Order {
   id         String     @id @default(uuid()) @db.Uuid
   code       String     @unique
-  customerId String     @db.Uuid
+  customerId String     @db.Uuid @map("customer_id")
   remark     String?
-  createdAt  DateTime   @default(now())
+  createdAt  DateTime   @default(now()) @map("created_at")
   customer   Customer   @relation(fields: [customerId], references: [id])
   subOrders  SubOrder[]
 
@@ -124,13 +122,13 @@ model Order {
 model SubOrder {
   id              String       @id @default(uuid()) @db.Uuid
   code            String       @unique
-  orderId         String       @db.Uuid
-  itemId          String       @db.Uuid
-  warehouseId     String       @db.Uuid
-  supplierId      String       @db.Uuid
-  requestQuantity Decimal      @db.Decimal(14, 2)
-  orderTypeId     String       @db.Uuid
-  createDate      DateTime     @db.Date
+  orderId         String       @db.Uuid @map("order_id")
+  itemId          String       @db.Uuid @map("item_id")
+  warehouseId     String       @db.Uuid @map("warehouse_id")
+  supplierId      String       @db.Uuid @map("supplier_id")
+  requestQuantity Decimal      @db.Decimal(14, 2) @map("request_quantity")
+  orderTypeId     String       @db.Uuid @map("order_type_id")
+  createDate      DateTime     @db.Date @map("create_date")
   status          String       @default("pending")
   order           Order        @relation(fields: [orderId], references: [id])
   item            Item         @relation(fields: [itemId], references: [id])
@@ -151,13 +149,13 @@ model SubOrder {
 // A sub-order can be filled from multiple inventory sources -> one sub_order : many rows
 model Allocation {
   id                String    @id @default(uuid()) @db.Uuid
-  subOrderId        String    @db.Uuid
-  inventoryId       String    @db.Uuid
-  allocatedQuantity Decimal   @db.Decimal(14, 2)
-  unitPrice         Decimal   @db.Decimal(14, 2)
-  totalPrice        Decimal   @db.Decimal(14, 2)
+  subOrderId        String    @db.Uuid @map("sub_order_id")
+  inventoryId       String    @db.Uuid @map("inventory_id")
+  allocatedQuantity Decimal   @db.Decimal(14, 2) @map("allocated_quantity")
+  unitPrice         Decimal   @db.Decimal(14, 2) @map("unit_price")
+  totalPrice        Decimal   @db.Decimal(14, 2) @map("total_price")
   method            String    @default("auto")
-  createdAt         DateTime  @default(now())
+  createdAt         DateTime  @default(now()) @map("created_at")
   subOrder          SubOrder  @relation(fields: [subOrderId], references: [id])
   inventory         Inventory @relation(fields: [inventoryId], references: [id])
 

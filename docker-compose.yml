@@ -30,8 +30,11 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      - ./backend/tsconfig.build.json:/app/tsconfig.build.json
+      - ./backend/nest-cli.json:/app/nest-cli.json
     depends_on:
       db:
         condition: service_healthy
@@ -44,13 +47,13 @@ services:
     env_file: .env
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      API_URL: http://backend:3001
       HOSTNAME: 0.0.0.0
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
     depends_on:
       - backend
 
