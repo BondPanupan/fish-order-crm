@@ -1,0 +1,137 @@
+// =====================================================================
+// Interview 12.1 - Salmon Allocation
+// Paste this into the editor at https://dbdiagram.io
+// =====================================================================
+
+// ---- Reference / master data ----------------------------------------
+
+Table customers {
+  id            integer       [pk, increment]
+  code          varchar       [unique, not null]
+  name          varchar       [not null]
+  credit_limit  "decimal(14,2)" [not null, default: 0, note: 'Max credit a customer may use']
+  created_at    timestamp     [default: `now()`]
+}
+
+Table order_types {
+  id        integer  [pk, increment]
+  code      varchar  [unique, not null, note: 'EMERGENCY / OVERDUE / DAILY']
+  name      varchar  [not null]
+  priority  integer  [not null, note: 'Lower = served first. Emergency < Overdue < Daily']
+}
+
+Table suppliers {
+  id           integer  [pk, increment]
+  code         varchar  [unique, not null, note: 'e.g. SP-001']
+  name         varchar  [not null]
+  is_wildcard  boolean  [not null, default: false, note: 'true for SP-000 = any supplier']
+  created_at   timestamp [default: `now()`]
+}
+
+Table warehouses {
+  id           integer  [pk, increment]
+  code         varchar  [unique, not null, note: 'e.g. WH-001']
+  name         varchar  [not null]
+  is_wildcard  boolean  [not null, default: false, note: 'true for WH-000 = any warehouse']
+  created_at   timestamp [default: `now()`]
+}
+
+Table products {
+  id    integer  [pk, increment]
+  code  varchar  [unique, not null]
+  name  varchar  [not null, note: 'Salmon (kept generic so other goods can be added)']
+  unit  varchar  [not null, default: 'kg']
+}
+
+// ---- Stock & pricing -------------------------------------------------
+
+// Remaining stock per supplier + warehouse + product.
+// Wildcard resolution (SP-000 / WH-000) = pick rows ordered by
+// remaining_quantity DESC ("highest remaining stock first").
+Table inventory {
+  id                  integer        [pk, increment]
+  supplier_id         integer        [not null, ref: > suppliers.id]
+  warehouse_id        integer        [not null, ref: > warehouses.id]
+  product_id          integer        [not null, ref: > products.id]
+  remaining_quantity  "decimal(14,2)" [not null, default: 0]
+  updated_at          timestamp      [default: `now()`]
+
+  indexes {
+    (supplier_id, warehouse_id, product_id) [unique]
+    remaining_quantity
+  }
+}
+
+// Unit price keyed by supplier, adjusted per order type.
+Table supplier_prices {
+  id            integer        [pk, increment]
+  supplier_id   integer        [not null, ref: > suppliers.id]
+  order_type_id integer        [not null, ref: > order_types.id]
+  product_id    integer        [not null, ref: > products.id]
+  unit_price    "decimal(14,2)" [not null]
+
+  indexes {
+    (supplier_id, order_type_id, product_id) [unique]
+  }
+}
+
+// ---- Orders & allocations -------------------------------------------
+
+Table orders {
+  id                  integer        [pk, increment]
+  code                varchar        [unique, not null, note: 'Searchable order id']
+  customer_id         integer        [not null, ref: > customers.id]
+  order_type_id       integer        [not null, ref: > order_types.id]
+  product_id          integer        [not null, ref: > products.id]
+  supplier_id         integer        [not null, ref: > suppliers.id, note: 'May point to the SP-000 wildcard row']
+  warehouse_id        integer        [not null, ref: > warehouses.id, note: 'May point to the WH-000 wildcard row']
+  requested_quantity  "decimal(14,2)" [not null]
+  status              varchar        [not null, default: 'pending', note: 'pending / partial / allocated']
+  created_at          timestamp      [not null, default: `now()`, note: 'Drives FIFO tie-breaking']
+
+  indexes {
+    customer_id
+    order_type_id
+    created_at
+    status
+    code
+  }
+}
+
+// An order can be filled from several supplier/warehouse sources,
+// so allocations is a separate line-item table (one order -> many rows).
+Table allocations {
+  id                  integer        [pk, increment]
+  order_id            integer        [not null, ref: > orders.id]
+  inventory_id        integer        [not null, ref: > inventory.id, note: 'The concrete source chosen']
+  allocated_quantity  "decimal(14,2)" [not null]
+  unit_price          "decimal(14,2)" [not null, note: 'Snapshot of price at allocation time']
+  total_price         "decimal(14,2)" [not null, note: 'Bankers rounding to 2 dp']
+  method              varchar        [not null, default: 'auto', note: 'auto / manual']
+  created_at          timestamp      [default: `now()`]
+
+  indexes {
+    order_id
+    inventory_id
+  }
+}
+
+// ---- Visual grouping (optional, purely cosmetic in dbdiagram) --------
+
+TableGroup reference_data {
+  customers
+  order_types
+  suppliers
+  warehouses
+  products
+}
+
+TableGroup stock_and_pricing {
+  inventory
+  supplier_prices
+}
+
+TableGroup ordering {
+  orders
+  allocations
+}
