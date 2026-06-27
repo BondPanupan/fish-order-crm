@@ -7,7 +7,7 @@ const SUB_ORDER_INCLUDE = {
   item: { select: { id: true, code: true, name: true, unit: true } },
   warehouse: { select: { id: true, code: true, name: true } },
   supplier: { select: { id: true, code: true, name: true } },
-  orderType: { select: { id: true, code: true, name: true } },
+  orderType: { select: { id: true, code: true, name: true, percentage: true } },
 } as const;
 
 @Injectable()
@@ -59,7 +59,59 @@ export class OrderDbService {
       },
     });
     if (!order) throw new NotFoundException(`Order ${id} not found`);
-    return order;
+    if (order.subOrders.length === 0) return { ...order, subOrders: [] };
+
+    // Batch-fetch exact prices (item + supplier + specific order type)
+    const exactPrices = await this.prisma.price.findMany({
+      where: {
+        OR: order.subOrders.map((s) => ({
+          itemId: s.itemId,
+          supplierId: s.supplierId,
+          orderTypeId: s.orderTypeId,
+        })),
+      },
+    });
+    const exactMap = new Map(
+      exactPrices.map((p) => [`${p.itemId}:${p.supplierId}:${p.orderTypeId}`, Number(p.unitPrice)]),
+    );
+
+    // For lines without an exact price, fetch base prices (orderTypeId = null) and apply percentage
+    const needBase = order.subOrders.filter(
+      (s) => !exactMap.has(`${s.itemId}:${s.supplierId}:${s.orderTypeId}`),
+    );
+    const basePriceMap = new Map<string, number>();
+    if (needBase.length > 0) {
+      const basePrices = await this.prisma.price.findMany({
+        where: {
+          orderTypeId: null,
+          OR: needBase.map((s) => ({ itemId: s.itemId, supplierId: s.supplierId })),
+        },
+      });
+      for (const p of basePrices) {
+        basePriceMap.set(`${p.itemId}:${p.supplierId}`, Number(p.unitPrice));
+      }
+    }
+
+    const subOrders = order.subOrders.map((sub) => {
+      const exact = exactMap.get(`${sub.itemId}:${sub.supplierId}:${sub.orderTypeId}`);
+      let unitPrice: number | null = null;
+      if (exact !== undefined) {
+        unitPrice = exact;
+      } else {
+        const base = basePriceMap.get(`${sub.itemId}:${sub.supplierId}`);
+        if (base !== undefined) {
+          unitPrice = base * (Number(sub.orderType.percentage) / 100);
+        }
+      }
+      const qty = Number(sub.requestQuantity);
+      return {
+        ...sub,
+        unitPrice,
+        totalPrice: unitPrice !== null ? unitPrice * qty : null,
+      };
+    });
+
+    return { ...order, subOrders };
   }
 
   async update(id: string, dto: UpdateOrderDto) {

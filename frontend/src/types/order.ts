@@ -5,10 +5,12 @@ export type SubOrderRecord = {
   requestQuantity: string;
   createDate: string;
   status: string;
+  unitPrice: number | null;
+  totalPrice: number | null;
   item: { id: string; code: string; name: string | null; unit: string };
   warehouse: { id: string; code: string; name: string | null };
   supplier: { id: string; code: string; name: string | null };
-  orderType: { id: string; code: string; name: string | null };
+  orderType: { id: string; code: string; name: string | null; percentage: string };
 };
 
 export type OrderRecord = {

@@ -154,14 +154,17 @@
   margin-right: 0.5rem;
 }
 
-.expandBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
+.btnView {
+  display: inline-block;
+  padding: 0.4rem 0.75rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
   font-size: 0.8rem;
-  color: #0070f3;
-  padding: 0.3rem 0.6rem;
+  font-weight: 500;
   margin-right: 0.5rem;
+  white-space: nowrap;
 }
 
 /* ── Sub-order expansion panel ───────────────────── */
@@ -339,4 +342,16 @@
   color: #c00;
   font-size: 0.8rem;
   padding: 0.2rem 0.4rem;
+}
+
+.pricePreview {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  color: #166534;
 }

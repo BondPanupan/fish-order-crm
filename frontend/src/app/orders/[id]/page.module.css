@@ -1,0 +1,188 @@
+.page {
+  padding: 2rem;
+  max-width: 1100px;
+  font-family: var(--font-geist-sans);
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.backBtn:hover {
+  text-decoration: underline;
+}
+
+/* ── Header card ── */
+.headerCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.orderCode {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111;
+  font-family: var(--font-geist-mono);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.metaLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.metaValue {
+  font-size: 0.9rem;
+  color: #111;
+}
+
+/* ── Section ── */
+.section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #111;
+}
+
+/* ── Table ── */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.th {
+  padding: 0.65rem 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  text-align: left;
+  background: #f9fafb;
+  white-space: nowrap;
+  color: #374151;
+}
+
+.thRight { text-align: right; }
+.thCenter { text-align: center; }
+
+.trEven { background: #fff; }
+.trOdd  { background: #f9fafb; }
+
+.td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.tdRight  { text-align: right; }
+.tdCenter { text-align: center; }
+
+.totalCell {
+  font-weight: 600;
+  color: #111;
+}
+
+.mono {
+  font-family: var(--font-geist-mono);
+  font-weight: 500;
+}
+
+.sub {
+  color: #6b7280;
+  font-size: 0.85em;
+}
+
+/* ── Grand total ── */
+.grandTotal {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #e5e7eb;
+}
+
+.grandTotalLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.grandTotalValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+  font-family: var(--font-geist-mono);
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.badgePending   { background: #fff3cd; color: #856404; }
+.badgeFulfilled { background: #d1e7dd; color: #155724; }
+.badgeCancelled { background: #f8d7da; color: #721c24; }
+
+/* ── Utils ── */
+.muted {
+  color: #6b7280;
+}
+
+.errorBox {
+  background: #fff3f3;
+  border: 1px solid #f5c0c0;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  color: #c00;
+  font-size: 0.875rem;
+}

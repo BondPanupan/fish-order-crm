@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import styles from './OrderManager.module.css';
 import type { OrderRecord, OrderFormState, SubOrderFormLine } from '@/types/order';
 import type { Customer } from '@/types/customer';
@@ -8,12 +9,14 @@ import type { Item } from '@/types/item';
 import type { Supplier } from '@/types/supplier';
 import type { Warehouse } from '@/types/warehouse';
 import type { OrderType } from '@/types/order-type';
-import { fetchAllOrders, fetchOneOrder, createOrder, updateOrder, deleteOrder } from '@/lib/api/orders/orders.api';
+import { fetchAllOrders, createOrder, updateOrder, deleteOrder } from '@/lib/api/orders/orders.api';
 import { fetchAllCustomers } from '@/lib/api/customers/customers.api';
 import { fetchAllItems } from '@/lib/api/items/items.api';
 import { fetchAllSuppliers } from '@/lib/api/suppliers/suppliers.api';
 import { fetchAllOrderTypes } from '@/lib/api/order-types/order-types.api';
 import { fetchAllWarehouses } from '@/lib/api/warehouses/warehouses.api';
+import { fetchAllPrices } from '@/lib/api/prices/prices.api';
+import type { PriceRecord } from '@/types/price';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -34,12 +37,6 @@ const emptyForm = (): OrderFormState => ({
   subOrders: [emptyLine()],
 });
 
-function statusClass(status: string) {
-  if (status === 'fulfilled') return styles.badgeFulfilled;
-  if (status === 'cancelled') return styles.badgeCancelled;
-  return styles.badgePending;
-}
-
 export default function OrderManager() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -47,6 +44,7 @@ export default function OrderManager() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
+  const [prices, setPrices] = useState<PriceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,23 +57,20 @@ export default function OrderManager() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [expandedOrder, setExpandedOrder] = useState<OrderRecord | null>(null);
-  const [expandLoading, setExpandLoading] = useState(false);
-
   const [search, setSearch] = useState('');
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [ords, custs, itms, sups, whs, ots] = await Promise.all([
+      const [ords, custs, itms, sups, whs, ots, prs] = await Promise.all([
         fetchAllOrders(),
         fetchAllCustomers(),
         fetchAllItems(),
         fetchAllSuppliers(),
         fetchAllWarehouses(),
         fetchAllOrderTypes(),
+        fetchAllPrices(),
       ]);
       setOrders(ords);
       setCustomers(custs);
@@ -83,6 +78,7 @@ export default function OrderManager() {
       setSuppliers(sups);
       setWarehouses(whs);
       setOrderTypes(ots);
+      setPrices(prs);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -91,24 +87,6 @@ export default function OrderManager() {
   }, []);
 
   useEffect(() => { loadAll(); }, [loadAll]);
-
-  async function toggleExpand(id: string) {
-    if (expandedId === id) {
-      setExpandedId(null);
-      setExpandedOrder(null);
-      return;
-    }
-    setExpandedId(id);
-    setExpandLoading(true);
-    try {
-      const detail = await fetchOneOrder(id);
-      setExpandedOrder(detail);
-    } catch {
-      setExpandedOrder(null);
-    } finally {
-      setExpandLoading(false);
-    }
-  }
 
   function openCreate() {
     setForm(emptyForm());
@@ -182,7 +160,6 @@ export default function OrderManager() {
   async function handleDelete(id: string) {
     setConfirmId(null);
     setDeletingId(id);
-    if (expandedId === id) { setExpandedId(null); setExpandedOrder(null); }
     try {
       await deleteOrder(id);
       loadAll();
@@ -191,6 +168,28 @@ export default function OrderManager() {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  function lookupPrice(line: SubOrderFormLine): { unitPrice: number | null; total: number | null } {
+    if (!line.itemId || !line.supplierId || !line.orderTypeId) return { unitPrice: null, total: null };
+    const exact = prices.find(
+      (p) => p.itemId === line.itemId && p.supplierId === line.supplierId && p.orderTypeId === line.orderTypeId,
+    );
+    let unitPrice: number | null = null;
+    if (exact) {
+      unitPrice = Number(exact.unitPrice);
+    } else {
+      const base = prices.find(
+        (p) => p.itemId === line.itemId && p.supplierId === line.supplierId && p.orderTypeId === null,
+      );
+      if (base) {
+        const ot = orderTypes.find((o) => o.id === line.orderTypeId);
+        if (ot) unitPrice = Number(base.unitPrice) * (Number(ot.percentage) / 100);
+      }
+    }
+    const qty = Number(line.requestQuantity);
+    const total = unitPrice !== null && qty > 0 ? unitPrice * qty : null;
+    return { unitPrice, total };
   }
 
   const q = search.toLowerCase();
@@ -206,7 +205,7 @@ export default function OrderManager() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Orders</h1>
+        <h1 className={styles.title}>Manage Orders</h1>
         <button onClick={openCreate} className={styles.btnPrimary}>+ New Order</button>
       </div>
 
@@ -246,98 +245,33 @@ export default function OrderManager() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((o, i) => {
-                const isExpanded = expandedId === o.id;
-                return (
-                  <Fragment key={o.id}>
-                    <tr className={isExpanded ? styles.trExpanded : i % 2 === 0 ? styles.trEven : styles.trOdd}>
-                      <td className={styles.td}>
-                        <span className={styles.code}>{o.code}</span>
-                      </td>
-                      <td className={styles.td}>
-                        <span className={styles.code}>{o.customer.code}</span>
-                        {o.customer.name && <span className={styles.subtext}> {o.customer.name}</span>}
-                      </td>
-                      <td className={styles.td}>{o.remark ?? '—'}</td>
-                      <td className={`${styles.td} ${styles.tdCenter}`}>{o._count?.subOrders ?? 0}</td>
-                      <td className={styles.td}>
-                        {new Date(o.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td className={`${styles.td} ${styles.tdActions}`}>
-                        <button onClick={() => toggleExpand(o.id)} className={styles.expandBtn}>
-                          {isExpanded ? '▲ Hide' : '▼ Lines'}
-                        </button>
-                        <button onClick={() => openEdit(o)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
-                        <button
-                          onClick={() => setConfirmId(o.id)}
-                          disabled={deletingId === o.id}
-                          className={styles.btnDanger}
-                        >
-                          {deletingId === o.id ? '…' : 'Delete'}
-                        </button>
-                      </td>
-                    </tr>
-                    {isExpanded && (
-                      <tr className={styles.expandRow}>
-                        <td colSpan={6}>
-                          <div className={styles.subOrderPanel}>
-                            {expandLoading ? (
-                              <p className={styles.muted}>Loading lines…</p>
-                            ) : expandedOrder?.subOrders && expandedOrder.subOrders.length > 0 ? (
-                              <>
-                                <div className={styles.subOrderTitle}>Order Lines</div>
-                                <table className={styles.subTable}>
-                                  <thead>
-                                    <tr>
-                                      <th className={styles.subTh}>Line</th>
-                                      <th className={styles.subTh}>Item</th>
-                                      <th className={styles.subTh}>Warehouse</th>
-                                      <th className={styles.subTh}>Supplier</th>
-                                      <th className={styles.subTh}>Qty</th>
-                                      <th className={styles.subTh}>Order Type</th>
-                                      <th className={styles.subTh}>Date</th>
-                                      <th className={styles.subTh}>Status</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {expandedOrder.subOrders.map((s) => (
-                                      <tr key={s.id}>
-                                        <td className={styles.subTd}><span className={styles.code}>{s.code}</span></td>
-                                        <td className={styles.subTd}>
-                                          <span className={styles.code}>{s.item.code}</span>
-                                          {s.item.name && <span className={styles.subtext}> {s.item.name}</span>}
-                                        </td>
-                                        <td className={styles.subTd}>
-                                          <span className={styles.code}>{s.warehouse.code}</span>
-                                        </td>
-                                        <td className={styles.subTd}>
-                                          <span className={styles.code}>{s.supplier.code}</span>
-                                        </td>
-                                        <td className={styles.subTd}>
-                                          {Number(s.requestQuantity).toLocaleString()} {s.item.unit}
-                                        </td>
-                                        <td className={styles.subTd}>{s.orderType.code}</td>
-                                        <td className={styles.subTd}>
-                                          {new Date(s.createDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                        </td>
-                                        <td className={styles.subTd}>
-                                          <span className={`${styles.badge} ${statusClass(s.status)}`}>{s.status}</span>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </>
-                            ) : (
-                              <p className={styles.muted}>No lines.</p>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
+              {filtered.map((o, i) => (
+                <tr key={o.id} className={i % 2 === 0 ? styles.trEven : styles.trOdd}>
+                  <td className={styles.td}>
+                    <span className={styles.code}>{o.code}</span>
+                  </td>
+                  <td className={styles.td}>
+                    <span className={styles.code}>{o.customer.code}</span>
+                    {o.customer.name && <span className={styles.subtext}> {o.customer.name}</span>}
+                  </td>
+                  <td className={styles.td}>{o.remark ?? '—'}</td>
+                  <td className={`${styles.td} ${styles.tdCenter}`}>{o._count?.subOrders ?? 0}</td>
+                  <td className={styles.td}>
+                    {new Date(o.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className={`${styles.td} ${styles.tdActions}`}>
+                    <Link href={`/orders/${o.id}`} className={styles.btnView}>View</Link>
+                    <button onClick={() => openEdit(o)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
+                    <button
+                      onClick={() => setConfirmId(o.id)}
+                      disabled={deletingId === o.id}
+                      className={styles.btnDanger}
+                    >
+                      {deletingId === o.id ? '…' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -503,6 +437,18 @@ export default function OrderManager() {
                           />
                         </label>
                       </div>
+                      {(() => {
+                        const { unitPrice, total } = lookupPrice(line);
+                        if (unitPrice === null) return null;
+                        return (
+                          <div className={styles.pricePreview}>
+                            <span>Unit Price: <strong>{unitPrice.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                            {total !== null && (
+                              <span>Total: <strong>{total.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
