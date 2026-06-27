@@ -199,6 +199,8 @@ export default function PriceManager() {
                     {p.orderType ? (
                       <>
                         <span className={styles.code}>{p.orderType.code}</span>
+                        {p.orderType.name && <span className={styles.subtext}> {p.orderType.name}</span>}
+                        <span className={styles.subtext}> (×{Number(p.orderType.percentage).toFixed(2)}%)</span>
                       </>
                     ) : (
                       <span className={styles.code}>Base Price</span>
@@ -283,7 +285,7 @@ export default function PriceManager() {
                   <option value={NONE}>— Base Price —</option>
                   {orderTypes.map((ot) => (
                     <option key={ot.id} value={ot.id}>
-                      {ot.code}{ot.name ? ` — ${ot.name}` : ''}
+                      {ot.code}{ot.name ? ` — ${ot.name}` : ''} (×{Number(ot.percentage).toFixed(2)}%)
                     </option>
                   ))}
                 </select>

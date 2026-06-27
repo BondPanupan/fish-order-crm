@@ -393,7 +393,7 @@ export default function OrderManager() {
                             <option value="">— type —</option>
                             {orderTypes.map((ot) => (
                               <option key={ot.id} value={ot.id}>
-                                {ot.code}{ot.name ? ` — ${ot.name}` : ''}
+                                {ot.code}{ot.name ? ` — ${ot.name}` : ''} (×{Number(ot.percentage).toFixed(2)}%)
                               </option>
                             ))}
                           </select>
@@ -461,9 +461,25 @@ export default function OrderManager() {
                       {(() => {
                         const { unitPrice, total } = lookupPrice(line);
                         if (unitPrice === null) return null;
+                        const hasExact = prices.some(
+                          (p) => p.itemId === line.itemId && p.supplierId === line.supplierId && p.orderTypeId === line.orderTypeId,
+                        );
+                        const basePrice = !hasExact
+                          ? prices.find((p) => p.itemId === line.itemId && p.supplierId === line.supplierId && p.orderTypeId === null)
+                          : null;
+                        const ot = orderTypes.find((o) => o.id === line.orderTypeId);
                         return (
                           <div className={styles.pricePreview}>
-                            <span>Unit Price: <strong>{unitPrice.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                            {basePrice && ot ? (
+                              <span>
+                                Unit Price:{' '}
+                                <strong>{Number(basePrice.unitPrice).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                {' × '}{Number(ot.percentage).toFixed(2)}%{' = '}
+                                <strong>{unitPrice.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                              </span>
+                            ) : (
+                              <span>Unit Price: <strong>{unitPrice.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                            )}
                             {total !== null && (
                               <span>Total: <strong>{total.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
                             )}

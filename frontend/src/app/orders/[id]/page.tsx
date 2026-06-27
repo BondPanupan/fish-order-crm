@@ -126,7 +126,12 @@ export default function OrderDetailPage() {
                           </td>
                           <td className={styles.td}><span className={styles.mono}>{s.warehouse.code}</span></td>
                           <td className={styles.td}><span className={styles.mono}>{s.supplier.code}</span></td>
-                          <td className={styles.td}>{s.orderType.code}</td>
+                          <td className={styles.td}>
+                            {s.orderType.code}
+                            <span style={{ color: '#6b7280', fontSize: '0.8rem', marginLeft: '0.35rem' }}>
+                              (×{Number(s.orderType.percentage).toFixed(2)}%)
+                            </span>
+                          </td>
                           <td className={styles.td}>
                             {new Date(s.createDate).toLocaleDateString('en-GB', {
                               day: '2-digit', month: 'short', year: 'numeric',
