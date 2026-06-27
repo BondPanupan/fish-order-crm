@@ -40,21 +40,42 @@ export class OrderDbService {
     });
   }
 
-  findAll() {
-    return this.prisma.order.findMany({
-      orderBy: { createdAt: 'desc' },
+  async findAll() {
+    const orders = await this.prisma.order.findMany({
       include: {
-        customer: { select: { id: true, code: true, name: true } },
+        customer: { select: { id: true, code: true, name: true, creditLimit: true } },
         _count: { select: { subOrders: true } },
+        subOrders: {
+          select: { orderType: { select: { id: true, code: true, name: true, priority: true } } },
+        },
       },
     });
+
+    return orders
+      .sort((a, b) => {
+        const minPriorityA = a.subOrders.length
+          ? Math.min(...a.subOrders.map((s) => s.orderType.priority))
+          : Number.MAX_SAFE_INTEGER;
+        const minPriorityB = b.subOrders.length
+          ? Math.min(...b.subOrders.map((s) => s.orderType.priority))
+          : Number.MAX_SAFE_INTEGER;
+
+        if (minPriorityA !== minPriorityB) return minPriorityA - minPriorityB;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      })
+      .map(({ subOrders, ...order }) => ({
+        ...order,
+        orderTypes: [
+          ...new Map(subOrders.map((s) => [s.orderType.id, s.orderType])).values(),
+        ].map(({ id: _id, priority: _p, ...ot }) => ot),
+      }));
   }
 
   async findOne(id: string) {
     const order = await this.prisma.order.findFirst({
       where: { id },
       include: {
-        customer: { select: { id: true, code: true, name: true } },
+        customer: { select: { id: true, code: true, name: true, creditLimit: true } },
         subOrders: { include: SUB_ORDER_INCLUDE, orderBy: { code: 'asc' } },
       },
     });

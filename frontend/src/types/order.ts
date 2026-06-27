@@ -19,8 +19,9 @@ export type OrderRecord = {
   customerId: string;
   remark: string | null;
   createdAt: string;
-  customer: { id: string; code: string; name: string | null };
+  customer: { id: string; code: string; name: string | null; creditLimit: string };
   _count?: { subOrders: number };
+  orderTypes?: { code: string; name: string | null }[];
   subOrders?: SubOrderRecord[];
 };
 

@@ -71,6 +71,7 @@ export default function Home() {
               <tr>
                 <th className={styles.th}>Order</th>
                 <th className={styles.th}>Customer</th>
+                <th className={styles.th}>Order Type</th>
                 <th className={styles.th}>Remark</th>
                 <th className={`${styles.th} ${styles.thCenter}`}>Lines</th>
                 <th className={styles.th}>Created</th>
@@ -84,6 +85,15 @@ export default function Home() {
                   <td className={styles.td}>
                     <span className={styles.code}>{o.customer.code}</span>
                     {o.customer.name && <span className={styles.subtext}> {o.customer.name}</span>}
+                  </td>
+                  <td className={styles.td}>
+                    {o.orderTypes && o.orderTypes.length > 0
+                      ? o.orderTypes.map((ot) => (
+                          <span key={ot.code} className={styles.orderTypeTag}>
+                            {ot.code}{ot.name ? ` — ${ot.name}` : ''}
+                          </span>
+                        ))
+                      : <span className={styles.muted}>—</span>}
                   </td>
                   <td className={styles.td}>{o.remark ?? '—'}</td>
                   <td className={`${styles.td} ${styles.tdCenter}`}>{o._count?.subOrders ?? 0}</td>

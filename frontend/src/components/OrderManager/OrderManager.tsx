@@ -192,6 +192,17 @@ export default function OrderManager() {
     return { unitPrice, total };
   }
 
+  function formOrderTotal(): number {
+    return form.subOrders.reduce((sum, line) => {
+      const { total } = lookupPrice(line);
+      return sum + (total ?? 0);
+    }, 0);
+  }
+
+  function selectedCustomer() {
+    return customers.find((c) => c.id === form.customerId) ?? null;
+  }
+
   const q = search.toLowerCase();
   const filtered = orders.filter(
     (o) =>
@@ -238,6 +249,7 @@ export default function OrderManager() {
               <tr>
                 <th className={styles.th}>Code</th>
                 <th className={styles.th}>Customer</th>
+                <th className={styles.th}>Order Type</th>
                 <th className={styles.th}>Remark</th>
                 <th className={`${styles.th} ${styles.thCenter}`}>Lines</th>
                 <th className={styles.th}>Created</th>
@@ -253,6 +265,15 @@ export default function OrderManager() {
                   <td className={styles.td}>
                     <span className={styles.code}>{o.customer.code}</span>
                     {o.customer.name && <span className={styles.subtext}> {o.customer.name}</span>}
+                  </td>
+                  <td className={styles.td}>
+                    {o.orderTypes && o.orderTypes.length > 0
+                      ? o.orderTypes.map((ot) => (
+                          <span key={ot.code} className={styles.orderTypeTag}>
+                            {ot.code}{ot.name ? ` — ${ot.name}` : ''}
+                          </span>
+                        ))
+                      : <span className={styles.muted}>—</span>}
                   </td>
                   <td className={styles.td}>{o.remark ?? '—'}</td>
                   <td className={`${styles.td} ${styles.tdCenter}`}>{o._count?.subOrders ?? 0}</td>
@@ -454,10 +475,38 @@ export default function OrderManager() {
                 </div>
               )}
 
+              {modal === 'create' && (() => {
+                const cust = selectedCustomer();
+                const total = formOrderTotal();
+                const limit = cust ? Number(cust.creditLimit) : 0;
+                const over = limit > 0 && total > limit;
+                if (!cust || total === 0) return null;
+                return (
+                  <div className={`${styles.creditSummary} ${over ? styles.creditSummaryOver : styles.creditSummaryOk}`}>
+                    <span>Order Total: <strong>{total.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                    {limit > 0 && (
+                      <span>
+                        {over
+                          ? `⚠ Exceeds credit limit by ${(total - limit).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (limit: ${limit.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                          : `✓ Within credit limit (limit: ${limit.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               {formError && <div className={styles.errorBox}>{formError}</div>}
               <div className={styles.formActions}>
                 <button type="button" onClick={closeModal} className={styles.btnSecondary} disabled={submitting}>Cancel</button>
-                <button type="submit" className={styles.btnPrimary} disabled={submitting}>
+                <button
+                  type="submit"
+                  className={styles.btnPrimary}
+                  disabled={submitting || (() => {
+                    if (modal !== 'create') return false;
+                    const cust = selectedCustomer();
+                    const limit = cust ? Number(cust.creditLimit) : 0;
+                    return limit > 0 && formOrderTotal() > limit;
+                  })()}
+                >
                   {submitting ? 'Saving…' : modal === 'create' ? 'Create' : 'Save'}
                 </button>
               </div>

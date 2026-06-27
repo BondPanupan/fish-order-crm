@@ -138,12 +138,18 @@
 /* ── Grand total ── */
 .grandTotal {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1.5rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 2px solid #e5e7eb;
+}
+
+.grandTotalRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .grandTotalLabel {
@@ -157,6 +163,29 @@
   font-weight: 700;
   color: #111;
   font-family: var(--font-geist-mono);
+}
+
+.overLimit {
+  color: #dc2626;
+}
+
+.creditStatus {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+}
+
+.creditOk {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.creditOver {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 /* ── Badges ── */

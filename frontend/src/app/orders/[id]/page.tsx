@@ -39,6 +39,9 @@ export default function OrderDetailPage() {
     0,
   ) ?? 0;
 
+  const creditLimit = order ? Number(order.customer.creditLimit) : 0;
+  const overLimit = creditLimit > 0 && grandTotal > creditLimit;
+
   return (
     <div className={styles.page}>
       <button onClick={() => router.back()} className={styles.backBtn}>
@@ -64,6 +67,12 @@ export default function OrderDetailPage() {
                 <span className={styles.metaValue}>
                   <span className={styles.mono}>{order.customer.code}</span>
                   {order.customer.name && ` — ${order.customer.name}`}
+                </span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Credit Limit</span>
+                <span className={styles.metaValue}>
+                  {Number(order.customer.creditLimit).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div className={styles.metaItem}>
@@ -138,8 +147,19 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className={styles.grandTotal}>
-                  <span className={styles.grandTotalLabel}>Grand Total</span>
-                  <span className={styles.grandTotalValue}>{fmt(grandTotal)}</span>
+                  <div className={styles.grandTotalRow}>
+                    <span className={styles.grandTotalLabel}>Grand Total</span>
+                    <span className={`${styles.grandTotalValue} ${overLimit ? styles.overLimit : ''}`}>
+                      {fmt(grandTotal)}
+                    </span>
+                  </div>
+                  {creditLimit > 0 && (
+                    <div className={`${styles.creditStatus} ${overLimit ? styles.creditOver : styles.creditOk}`}>
+                      {overLimit
+                        ? `⚠ Exceeds credit limit — over by ${fmt(grandTotal - creditLimit)} (limit: ${fmt(creditLimit)})`
+                        : `✓ Within credit limit — remaining ${fmt(creditLimit - grandTotal)} of ${fmt(creditLimit)}`}
+                    </div>
+                  )}
                 </div>
               </>
             )}
