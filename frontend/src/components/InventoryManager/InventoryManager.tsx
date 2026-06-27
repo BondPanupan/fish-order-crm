@@ -118,6 +118,7 @@ export default function InventoryManager() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this inventory entry? This cannot be undone.')) return;
     setDeletingId(id);
     try {
       await deleteInventory(id);

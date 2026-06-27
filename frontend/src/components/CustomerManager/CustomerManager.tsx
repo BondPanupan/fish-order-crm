@@ -83,6 +83,7 @@ export default function CustomerManager() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this customer? This cannot be undone.')) return;
     setDeletingId(id);
     try {
       await deleteCustomer(id);

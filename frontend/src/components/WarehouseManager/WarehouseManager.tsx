@@ -52,6 +52,7 @@ export default function WarehouseManager() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this warehouse? This cannot be undone.')) return;
     setDeletingId(id);
     try { await deleteWarehouse(id); loadAll(); }
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }

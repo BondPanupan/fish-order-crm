@@ -52,6 +52,7 @@ export default function SupplierManager() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this supplier? This cannot be undone.')) return;
     setDeletingId(id);
     try { await deleteSupplier(id); loadAll(); }
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }

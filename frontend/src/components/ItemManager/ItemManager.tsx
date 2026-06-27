@@ -52,6 +52,7 @@ export default function ItemManager() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this item? This cannot be undone.')) return;
     setDeletingId(id);
     try { await deleteItem(id); loadAll(); }
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }
