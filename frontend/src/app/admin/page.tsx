@@ -9,6 +9,7 @@ const menuItems = [
   { href: '/admin/items', label: 'Items', description: 'Manage fish product catalogue' },
   { href: '/admin/suppliers', label: 'Suppliers', description: 'Manage supplier master data' },
   { href: '/admin/warehouses', label: 'Warehouses', description: 'Manage warehouse master data' },
+  { href: '/admin/prices', label: 'Prices', description: 'Manage item prices by supplier and order type' },
 ];
 
 export default function AdminPage() {
