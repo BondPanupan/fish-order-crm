@@ -9,9 +9,10 @@ import { WarehousesModule } from './app/warehouses/warehouses.module';
 import { InventoryModule } from './app/inventory/inventory.module';
 import { PricesModule } from './app/prices/prices.module';
 import { OrderTypesModule } from './app/order-types/order-types.module';
+import { OrdersModule } from './app/orders/orders.module';
 
 @Module({
-  imports: [PrismaModule, CustomersModule, ItemsModule, SuppliersModule, WarehousesModule, InventoryModule, PricesModule, OrderTypesModule],
+  imports: [PrismaModule, CustomersModule, ItemsModule, SuppliersModule, WarehousesModule, InventoryModule, PricesModule, OrderTypesModule, OrdersModule],
   controllers: [AppController],
   providers: [AppService],
 })

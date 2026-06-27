@@ -4,6 +4,7 @@ import Link from 'next/link';
 import styles from './page.module.css';
 
 const menuItems = [
+  { href: '/admin/orders', label: 'Orders', description: 'Create and manage customer orders' },
   { href: '/admin/customers', label: 'Customers', description: 'Manage customer records' },
   { href: '/admin/inventory', label: 'Inventory / Stock', description: 'View and adjust stock levels' },
   { href: '/admin/items', label: 'Items', description: 'Manage fish product catalogue' },
