@@ -34,13 +34,20 @@ git clone https://github.com/BondPanupan/fish-order-crm.git
 cd fish-order-crm
 ```
 
-**2. Create your environment file**
+**2. Create your environment files**
 
 ```bash
-cp .env.sample .env
+# Root — PostgreSQL credentials for Docker Compose
+cp .env.example .env 
+
+# Backend (NestJS)
+cp backend/.env.example backend/.env
+
+# Frontend (Next.js)
+cp frontend/.env.example frontend/.env
 ```
 
-Edit `.env` if you need different credentials (the defaults work out of the box).
+The default values work out of the box. Edit the files only if you need different credentials or ports.
 
 **3. Start all services**
 
@@ -104,10 +111,10 @@ When a sub-order is confirmed, the allocation engine splits the requested quanti
 
 ## Environment Variables
 
-Copy `.env.sample` to `.env` before starting:
+Copy `.env.example` to `.env` before starting:
 
 ```bash
-cp .env.sample .env
+cp .env.example .env
 ```
 
 | Variable | Where used | Description |
@@ -143,7 +150,7 @@ API_URL=http://backend:3001
 ```
 fish-order-crm/
 │
-├── .env.sample                   # Environment variable template
+├── .env.example                   # Environment variable template
 ├── docker-compose.yml            # Orchestrates db / backend / frontend
 │
 ├── db/
