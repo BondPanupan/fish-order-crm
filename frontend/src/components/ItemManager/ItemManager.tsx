@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import styles from '@/components/CustomerManager/CustomerManager.module.css';
 import type { Item } from '@/types/item';
 import { fetchAllItems, createItem, updateItem, deleteItem } from '@/lib/api/items/items.api';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 type FormState = { code: string; name: string; unit: string };
 const emptyForm: FormState = { code: '', name: '', unit: 'kg' };
@@ -18,6 +19,7 @@ export default function ItemManager() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -52,7 +54,7 @@ export default function ItemManager() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this item? This cannot be undone.')) return;
+    setConfirmId(null);
     setDeletingId(id);
     try { await deleteItem(id); loadAll(); }
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }
@@ -92,7 +94,7 @@ export default function ItemManager() {
                   <td className={styles.td}>{it.unit}</td>
                   <td className={`${styles.td} ${styles.tdActions}`}>
                     <button onClick={() => openEdit(it)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
-                    <button onClick={() => handleDelete(it.id)} disabled={deletingId === it.id} className={styles.btnDanger}>
+                    <button onClick={() => setConfirmId(it.id)} disabled={deletingId === it.id} className={styles.btnDanger}>
                       {deletingId === it.id ? '…' : 'Delete'}
                     </button>
                   </td>
@@ -101,6 +103,13 @@ export default function ItemManager() {
             </tbody>
           </table>
         </div>
+      )}
+      {confirmId && (
+        <ConfirmModal
+          message="Delete this item? This cannot be undone."
+          onConfirm={() => handleDelete(confirmId)}
+          onCancel={() => setConfirmId(null)}
+        />
       )}
       {modal && (
         <div className={styles.overlay} onClick={closeModal}>

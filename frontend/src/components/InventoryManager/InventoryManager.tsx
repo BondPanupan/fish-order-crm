@@ -15,6 +15,7 @@ import {
 import { fetchAllItems } from '@/lib/api/items/items.api';
 import { fetchAllSuppliers } from '@/lib/api/suppliers/suppliers.api';
 import { fetchAllWarehouses } from '@/lib/api/warehouses/warehouses.api';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 const emptyForm: InventoryFormState = {
   supplierId: '',
@@ -37,6 +38,7 @@ export default function InventoryManager() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
 
@@ -118,7 +120,7 @@ export default function InventoryManager() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this inventory entry? This cannot be undone.')) return;
+    setConfirmId(null);
     setDeletingId(id);
     try {
       await deleteInventory(id);
@@ -208,7 +210,7 @@ export default function InventoryManager() {
                   <td className={`${styles.td} ${styles.tdActions}`}>
                     <button onClick={() => openEdit(inv)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
                     <button
-                      onClick={() => handleDelete(inv.id)}
+                      onClick={() => setConfirmId(inv.id)}
                       disabled={deletingId === inv.id}
                       className={styles.btnDanger}
                     >
@@ -220,6 +222,14 @@ export default function InventoryManager() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmId && (
+        <ConfirmModal
+          message="Delete this inventory entry? This cannot be undone."
+          onConfirm={() => handleDelete(confirmId)}
+          onCancel={() => setConfirmId(null)}
+        />
       )}
 
       {modal && (

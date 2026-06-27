@@ -9,6 +9,7 @@ import {
   updateCustomer,
   deleteCustomer,
 } from '@/lib/api/customers/customers.api';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 const emptyForm: CustomerFormState = { code: '', name: '', creditLimit: '' };
 
@@ -24,6 +25,7 @@ export default function CustomerManager() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -83,7 +85,7 @@ export default function CustomerManager() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this customer? This cannot be undone.')) return;
+    setConfirmId(null);
     setDeletingId(id);
     try {
       await deleteCustomer(id);
@@ -145,7 +147,7 @@ export default function CustomerManager() {
                   <td className={`${styles.td} ${styles.tdActions}`}>
                     <button onClick={() => openEdit(c)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
                     <button
-                      onClick={() => handleDelete(c.id)}
+                      onClick={() => setConfirmId(c.id)}
                       disabled={deletingId === c.id}
                       className={styles.btnDanger}
                     >
@@ -157,6 +159,14 @@ export default function CustomerManager() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmId && (
+        <ConfirmModal
+          message="Delete this customer? This cannot be undone."
+          onConfirm={() => handleDelete(confirmId)}
+          onCancel={() => setConfirmId(null)}
+        />
       )}
 
       {modal && (

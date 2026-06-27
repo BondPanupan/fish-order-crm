@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import styles from '@/components/CustomerManager/CustomerManager.module.css';
 import type { Warehouse } from '@/types/warehouse';
 import { fetchAllWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from '@/lib/api/warehouses/warehouses.api';
+import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 
 type FormState = { code: string; name: string; isWildcard: boolean };
 const emptyForm: FormState = { code: '', name: '', isWildcard: false };
@@ -18,6 +19,7 @@ export default function WarehouseManager() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -52,7 +54,7 @@ export default function WarehouseManager() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this warehouse? This cannot be undone.')) return;
+    setConfirmId(null);
     setDeletingId(id);
     try { await deleteWarehouse(id); loadAll(); }
     catch (e) { alert(e instanceof Error ? e.message : String(e)); }
@@ -94,7 +96,7 @@ export default function WarehouseManager() {
                   <td className={styles.td}>{new Date(w.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                   <td className={`${styles.td} ${styles.tdActions}`}>
                     <button onClick={() => openEdit(w)} className={`${styles.btnSecondary} ${styles.actionEdit}`}>Edit</button>
-                    <button onClick={() => handleDelete(w.id)} disabled={deletingId === w.id} className={styles.btnDanger}>
+                    <button onClick={() => setConfirmId(w.id)} disabled={deletingId === w.id} className={styles.btnDanger}>
                       {deletingId === w.id ? '…' : 'Delete'}
                     </button>
                   </td>
@@ -103,6 +105,13 @@ export default function WarehouseManager() {
             </tbody>
           </table>
         </div>
+      )}
+      {confirmId && (
+        <ConfirmModal
+          message="Delete this warehouse? This cannot be undone."
+          onConfirm={() => handleDelete(confirmId)}
+          onCancel={() => setConfirmId(null)}
+        />
       )}
       {modal && (
         <div className={styles.overlay} onClick={closeModal}>
