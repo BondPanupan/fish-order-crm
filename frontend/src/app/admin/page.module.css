@@ -1,0 +1,44 @@
+.container {
+  max-width: 600px;
+  margin: 60px auto;
+  padding: 0 24px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menuItem {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.menuItem:hover {
+  background: #f9fafb;
+  border-color: #6b7280;
+}
+
+.menuLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.menuDescription {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
