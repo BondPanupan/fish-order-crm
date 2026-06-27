@@ -1,137 +1,152 @@
 // =====================================================================
-// Interview 12.1 - Salmon Allocation
-// Paste this into the editor at https://dbdiagram.io
+// Interview 12.1 - Salmon Allocation  (revised to match Example Data)
+// Paste into the editor at https://dbdiagram.io
 // =====================================================================
 
 // ---- Reference / master data ----------------------------------------
 
 Table customers {
-  id            integer       [pk, increment]
-  code          varchar       [unique, not null]
-  name          varchar       [not null]
-  credit_limit  "decimal(14,2)" [not null, default: 0, note: 'Max credit a customer may use']
-  created_at    timestamp     [default: `now()`]
+  id            integer         [pk, increment]
+  code          varchar         [unique, not null, note: 'e.g. CT-0001']
+  name          varchar
+  credit_limit  "decimal(14,2)" [not null, default: 0, note: 'Required by spec (not shown in sample)']
+  created_at    timestamp       [default: `now()`]
 }
 
+Table items {
+  id    integer  [pk, increment]
+  code  varchar  [unique, not null, note: 'e.g. Item-1']
+  name  varchar
+  unit  varchar  [not null, default: 'kg']
+}
+
+// order_types doubles as the "Price Tier" from the sample.
 Table order_types {
-  id        integer  [pk, increment]
-  code      varchar  [unique, not null, note: 'EMERGENCY / OVERDUE / DAILY']
-  name      varchar  [not null]
-  priority  integer  [not null, note: 'Lower = served first. Emergency < Overdue < Daily']
+  id          integer        [pk, increment]
+  code        varchar        [unique, not null, note: 'EMERGENCY / OVER_DUE / DAILY']
+  name        varchar
+  priority    integer        [not null, note: 'Serve order: EMERGENCY < OVER_DUE < DAILY']
+  percentage  "decimal(6,2)" [not null, note: 'Price-tier %: 125 / 100 / 90']
 }
 
 Table suppliers {
-  id           integer  [pk, increment]
-  code         varchar  [unique, not null, note: 'e.g. SP-001']
-  name         varchar  [not null]
-  is_wildcard  boolean  [not null, default: false, note: 'true for SP-000 = any supplier']
+  id           integer   [pk, increment]
+  code         varchar   [unique, not null, note: 'e.g. SP-001']
+  name         varchar
+  is_wildcard  boolean   [not null, default: false, note: 'true for SP-000 = any supplier']
   created_at   timestamp [default: `now()`]
 }
 
 Table warehouses {
-  id           integer  [pk, increment]
-  code         varchar  [unique, not null, note: 'e.g. WH-001']
-  name         varchar  [not null]
-  is_wildcard  boolean  [not null, default: false, note: 'true for WH-000 = any warehouse']
+  id           integer   [pk, increment]
+  code         varchar   [unique, not null, note: 'e.g. WH-001']
+  name         varchar
+  is_wildcard  boolean   [not null, default: false, note: 'true for WH-000 = any warehouse']
   created_at   timestamp [default: `now()`]
-}
-
-Table products {
-  id    integer  [pk, increment]
-  code  varchar  [unique, not null]
-  name  varchar  [not null, note: 'Salmon (kept generic so other goods can be added)']
-  unit  varchar  [not null, default: 'kg']
 }
 
 // ---- Stock & pricing -------------------------------------------------
 
-// Remaining stock per supplier + warehouse + product.
-// Wildcard resolution (SP-000 / WH-000) = pick rows ordered by
+// Remaining stock per supplier + warehouse + item.
+// Wildcard resolution (SP-000 / WH-000): pick rows ordered by
 // remaining_quantity DESC ("highest remaining stock first").
 Table inventory {
-  id                  integer        [pk, increment]
-  supplier_id         integer        [not null, ref: > suppliers.id]
-  warehouse_id        integer        [not null, ref: > warehouses.id]
-  product_id          integer        [not null, ref: > products.id]
+  id                  integer         [pk, increment]
+  supplier_id         integer         [not null, ref: > suppliers.id]
+  warehouse_id        integer         [not null, ref: > warehouses.id]
+  item_id             integer         [not null, ref: > items.id]
   remaining_quantity  "decimal(14,2)" [not null, default: 0]
-  updated_at          timestamp      [default: `now()`]
+  updated_at          timestamp       [default: `now()`]
 
   indexes {
-    (supplier_id, warehouse_id, product_id) [unique]
+    (supplier_id, warehouse_id, item_id) [unique]
     remaining_quantity
   }
 }
 
-// Unit price keyed by supplier, adjusted per order type.
-Table supplier_prices {
+// Price keyed by item + supplier (+ optional tier).
+// See "PRICING NOTE" in chat: order_type_id NULL = a base price used for
+// every tier (then multiplied by order_types.percentage); a non-NULL
+// order_type_id = an explicit price for that specific tier.
+Table prices {
   id            integer        [pk, increment]
+  item_id       integer        [not null, ref: > items.id]
   supplier_id   integer        [not null, ref: > suppliers.id]
-  order_type_id integer        [not null, ref: > order_types.id]
-  product_id    integer        [not null, ref: > products.id]
+  order_type_id integer        [ref: > order_types.id, note: 'NULL = base price for all tiers']
   unit_price    "decimal(14,2)" [not null]
 
   indexes {
-    (supplier_id, order_type_id, product_id) [unique]
+    (item_id, supplier_id, order_type_id) [unique]
   }
 }
 
-// ---- Orders & allocations -------------------------------------------
+// ---- Orders (header) & sub-orders (lines) ---------------------------
 
 Table orders {
-  id                  integer        [pk, increment]
-  code                varchar        [unique, not null, note: 'Searchable order id']
-  customer_id         integer        [not null, ref: > customers.id]
-  order_type_id       integer        [not null, ref: > order_types.id]
-  product_id          integer        [not null, ref: > products.id]
-  supplier_id         integer        [not null, ref: > suppliers.id, note: 'May point to the SP-000 wildcard row']
-  warehouse_id        integer        [not null, ref: > warehouses.id, note: 'May point to the WH-000 wildcard row']
-  requested_quantity  "decimal(14,2)" [not null]
-  status              varchar        [not null, default: 'pending', note: 'pending / partial / allocated']
-  created_at          timestamp      [not null, default: `now()`, note: 'Drives FIFO tie-breaking']
+  id           integer   [pk, increment]
+  code         varchar   [unique, not null, note: 'e.g. ORDER-0001']
+  customer_id  integer   [not null, ref: > customers.id]
+  remark       varchar   [note: 'e.g. Special for VIP']
+  created_at   timestamp [default: `now()`]
+}
+
+Table sub_orders {
+  id                integer         [pk, increment]
+  code              varchar         [unique, not null, note: 'e.g. ORDER-0001-001']
+  order_id          integer         [not null, ref: > orders.id]
+  item_id           integer         [not null, ref: > items.id]
+  warehouse_id      integer         [not null, ref: > warehouses.id, note: 'May be WH-000 wildcard']
+  supplier_id       integer         [not null, ref: > suppliers.id, note: 'May be SP-000 wildcard']
+  request_quantity  "decimal(14,2)" [not null]
+  order_type_id     integer         [not null, ref: > order_types.id]
+  create_date       date            [not null, note: 'Drives FIFO tie-breaking']
+  status            varchar         [not null, default: 'pending', note: 'pending / partial / allocated']
 
   indexes {
-    customer_id
+    order_id
+    item_id
     order_type_id
-    created_at
+    create_date
     status
     code
   }
 }
 
-// An order can be filled from several supplier/warehouse sources,
-// so allocations is a separate line-item table (one order -> many rows).
+// Allocation happens at the sub-order (line) level.
+// A line can be filled from multiple sources -> one sub_order : many rows.
 Table allocations {
-  id                  integer        [pk, increment]
-  order_id            integer        [not null, ref: > orders.id]
-  inventory_id        integer        [not null, ref: > inventory.id, note: 'The concrete source chosen']
+  id                  integer         [pk, increment]
+  sub_order_id        integer         [not null, ref: > sub_orders.id]
+  inventory_id        integer         [not null, ref: > inventory.id, note: 'Concrete source chosen']
   allocated_quantity  "decimal(14,2)" [not null]
-  unit_price          "decimal(14,2)" [not null, note: 'Snapshot of price at allocation time']
+  unit_price          "decimal(14,2)" [not null, note: 'Snapshot at allocation time']
   total_price         "decimal(14,2)" [not null, note: 'Bankers rounding to 2 dp']
-  method              varchar        [not null, default: 'auto', note: 'auto / manual']
-  created_at          timestamp      [default: `now()`]
+  method              varchar         [not null, default: 'auto', note: 'auto / manual']
+  created_at          timestamp       [default: `now()`]
 
   indexes {
-    order_id
+    sub_order_id
     inventory_id
   }
 }
 
-// ---- Visual grouping (optional, purely cosmetic in dbdiagram) --------
+// ---- Visual grouping (cosmetic in dbdiagram) ------------------------
 
 TableGroup reference_data {
   customers
+  items
   order_types
   suppliers
   warehouses
-  products
 }
 
 TableGroup stock_and_pricing {
   inventory
-  supplier_prices
+  prices
 }
 
 TableGroup ordering {
   orders
+  sub_orders
   allocations
 }
