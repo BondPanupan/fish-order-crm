@@ -124,16 +124,30 @@ export default function OrderManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
+
+    if (modal === 'create') {
+      if (!form.code.trim()) { setFormError('Order code is required.'); return; }
+      if (!form.customerId) { setFormError('Customer is required.'); return; }
+      if (form.subOrders.length === 0) { setFormError('Add at least one order line.'); return; }
+      for (let i = 0; i < form.subOrders.length; i++) {
+        const l = form.subOrders[i];
+        const n = i + 1;
+        if (!l.itemId) { setFormError(`Line ${n}: Item is required.`); return; }
+        if (!l.orderTypeId) { setFormError(`Line ${n}: Order type is required.`); return; }
+        if (!l.warehouseId) { setFormError(`Line ${n}: Warehouse is required.`); return; }
+        if (!l.supplierId) { setFormError(`Line ${n}: Supplier is required.`); return; }
+        const qty = Number(l.requestQuantity);
+        if (!l.requestQuantity || isNaN(qty) || qty <= 0) { setFormError(`Line ${n}: Quantity must be greater than 0.`); return; }
+        if (!l.createDate) { setFormError(`Line ${n}: Date is required.`); return; }
+      }
+    }
+
+    setSubmitting(true);
     try {
       if (modal === 'edit') {
         await updateOrder(editTarget!.id, { remark: form.remark || undefined });
       } else {
-        if (form.subOrders.length === 0) {
-          setFormError('Add at least one order line.');
-          return;
-        }
         await createOrder({
           code: form.code.trim(),
           customerId: form.customerId,

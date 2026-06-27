@@ -42,9 +42,13 @@ export default function ItemManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
-    const dto = { code: form.code.trim(), name: form.name.trim() || undefined, unit: form.unit.trim() || 'kg' };
+
+    if (!form.code.trim()) { setFormError('Code is required.'); return; }
+    if (!form.unit.trim()) { setFormError('Unit is required.'); return; }
+
+    setSubmitting(true);
+    const dto = { code: form.code.trim(), name: form.name.trim() || undefined, unit: form.unit.trim() };
     try {
       if (modal === 'edit') await updateItem(editTarget!.id, dto);
       else await createItem(dto);
@@ -125,8 +129,8 @@ export default function ItemManager() {
                 <input className={styles.input} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Item name" />
               </label>
               <label className={styles.label}>
-                Unit
-                <input className={styles.input} value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))} placeholder="kg" />
+                Unit <span className={styles.required}>*</span>
+                <input className={styles.input} value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))} placeholder="kg" required />
               </label>
               {formError && <div className={styles.errorBox}>{formError}</div>}
               <div className={styles.formActions}>

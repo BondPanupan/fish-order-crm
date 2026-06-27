@@ -248,7 +248,9 @@ Read-only list of all orders for end users. Shows order code, customer (code + n
 
 Drills into a single order. Displays customer info, credit limit, and a full table of sub-order lines with warehouse, supplier, order type, date, quantity, unit price, total, and status. A live credit-limit indicator shows remaining headroom or flags an over-limit order.
 
-![Order Detail](ex-images/02-admin-orders-detail.png)
+![Order Detail](ex-images/02-01-admin-orders-detail.png)
+
+![Order Detail 2](ex-images/02-02-admin-orders-detail.png)
 
 ---
 

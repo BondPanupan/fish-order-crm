@@ -1,7 +1,8 @@
-import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsString()
+  @IsNotEmpty({ message: 'Code is required' })
   code: string;
 
   @IsOptional()
@@ -10,6 +11,6 @@ export class CreateCustomerDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Min(0, { message: 'Credit limit must be 0 or greater' })
   creditLimit?: number;
 }

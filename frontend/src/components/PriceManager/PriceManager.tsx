@@ -93,21 +93,32 @@ export default function PriceManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
+
+    if (modal === 'create') {
+      if (!form.itemId) { setFormError('Item is required.'); return; }
+      if (!form.supplierId) { setFormError('Supplier is required.'); return; }
+    }
+    const price = Number(form.unitPrice);
+    if (!form.unitPrice || isNaN(price) || price <= 0) {
+      setFormError('Unit price must be greater than 0.');
+      return;
+    }
+
+    setSubmitting(true);
     const orderTypeId = form.orderTypeId === NONE ? null : form.orderTypeId;
     try {
       if (modal === 'edit') {
         await updatePrice(editTarget!.id, {
           orderTypeId,
-          unitPrice: Number(form.unitPrice),
+          unitPrice: price,
         });
       } else {
         await createPrice({
           itemId: form.itemId,
           supplierId: form.supplierId,
           orderTypeId,
-          unitPrice: Number(form.unitPrice),
+          unitPrice: price,
         });
       }
       closeModal();

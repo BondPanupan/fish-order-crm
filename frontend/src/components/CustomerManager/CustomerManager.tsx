@@ -62,8 +62,15 @@ export default function CustomerManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
+
+    if (!form.code.trim()) { setFormError('Code is required.'); return; }
+    if (form.creditLimit !== '') {
+      const n = Number(form.creditLimit);
+      if (isNaN(n) || n < 0) { setFormError('Credit limit must be 0 or greater.'); return; }
+    }
+
+    setSubmitting(true);
     const dto = {
       code: form.code.trim(),
       ...(form.name.trim() && { name: form.name.trim() }),

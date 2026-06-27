@@ -1,7 +1,8 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateItemDto {
   @IsString()
+  @IsNotEmpty({ message: 'Code is required' })
   code: string;
 
   @IsOptional()
@@ -10,5 +11,6 @@ export class CreateItemDto {
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty({ message: 'Unit cannot be empty' })
   unit?: string;
 }

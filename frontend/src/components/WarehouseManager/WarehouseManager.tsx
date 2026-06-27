@@ -42,8 +42,11 @@ export default function WarehouseManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
+
+    if (!form.code.trim()) { setFormError('Code is required.'); return; }
+
+    setSubmitting(true);
     const dto = { code: form.code.trim(), name: form.name.trim() || undefined, isWildcard: form.isWildcard };
     try {
       if (modal === 'edit') await updateWarehouse(editTarget!.id, dto);

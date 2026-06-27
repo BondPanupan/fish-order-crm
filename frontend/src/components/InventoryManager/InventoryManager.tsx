@@ -96,13 +96,25 @@ export default function InventoryManager() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setFormError(null);
+
+    if (modal === 'create') {
+      if (!form.itemId) { setFormError('Item is required.'); return; }
+      if (!form.supplierId) { setFormError('Supplier is required.'); return; }
+      if (!form.warehouseId) { setFormError('Warehouse is required.'); return; }
+    }
+    const qty = Number(form.remainingQuantity);
+    if (form.remainingQuantity === '' || isNaN(qty) || qty < 0) {
+      setFormError('Remaining quantity must be 0 or greater.');
+      return;
+    }
+
+    setSubmitting(true);
     const dto = {
       supplierId: form.supplierId,
       warehouseId: form.warehouseId,
       itemId: form.itemId,
-      remainingQuantity: Number(form.remainingQuantity),
+      remainingQuantity: qty,
     };
     try {
       if (modal === 'edit') {
