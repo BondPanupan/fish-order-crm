@@ -20,27 +20,27 @@ INSERT INTO order_types (id, code, name, priority, percentage) VALUES
   ('00000000-0000-0000-0001-000000000003', 'DAILY',     'Daily',     3,  90.00);  -- [SAMPLE]
 
 -- ---- items ----------------------------------------------------------
-INSERT INTO items (id, code, name, unit) VALUES
-  ('00000000-0000-0000-0002-000000000001', 'Item-1', 'Salmon grade A', 'kg'),     -- [SAMPLE]
-  ('00000000-0000-0000-0002-000000000002', 'Item-2', 'Salmon grade B', 'kg');     -- [SAMPLE]
+INSERT INTO items (id, code, name, unit, created_at, updated_at, created_by, updated_by, is_deleted) VALUES
+  ('00000000-0000-0000-0002-000000000001', 'Item-1', 'Salmon grade A', 'kg', NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0002-000000000002', 'Item-2', 'Salmon grade B', 'kg', NOW(), NOW(), 'system', 'system', FALSE);  -- [SAMPLE]
 
 -- ---- customers ------------------------------------------------------
 -- credit_limit [INVENTED]; CT-0002 is tight to exercise the credit cap
-INSERT INTO customers (id, code, name, credit_limit) VALUES
-  ('00000000-0000-0000-0003-000000000001', 'CT-0001', 'Customer 0001',       50000.00),  -- [SAMPLE]
-  ('00000000-0000-0000-0003-000000000002', 'CT-0002', 'Customer 0002 (VIP)', 30000.00);  -- [SAMPLE]
+INSERT INTO customers (id, code, name, credit_limit, created_at, updated_at, created_by, updated_by, is_deleted) VALUES
+  ('00000000-0000-0000-0003-000000000001', 'CT-0001', 'Customer 0001',       50000.00, NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0003-000000000002', 'CT-0002', 'Customer 0002 (VIP)', 30000.00, NOW(), NOW(), 'system', 'system', FALSE);  -- [SAMPLE]
 
 -- ---- suppliers  (SP-000 = wildcard) ---------------------------------
-INSERT INTO suppliers (id, code, name, is_wildcard) VALUES
-  ('00000000-0000-0000-0004-000000000001', 'SP-000', 'Any supplier (wildcard)', true),   -- [SAMPLE]
-  ('00000000-0000-0000-0004-000000000002', 'SP-001', 'Supplier 001',            false),  -- [SAMPLE]
-  ('00000000-0000-0000-0004-000000000003', 'SP-002', 'Supplier 002',            false);  -- [SAMPLE]
+INSERT INTO suppliers (id, code, name, is_wildcard, created_at, updated_at, created_by, updated_by, is_deleted) VALUES
+  ('00000000-0000-0000-0004-000000000001', 'SP-000', 'Any supplier (wildcard)', TRUE,  NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0004-000000000002', 'SP-001', 'Supplier 001',            FALSE, NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0004-000000000003', 'SP-002', 'Supplier 002',            FALSE, NOW(), NOW(), 'system', 'system', FALSE);  -- [SAMPLE]
 
 -- ---- warehouses  (WH-000 = wildcard) --------------------------------
-INSERT INTO warehouses (id, code, name, is_wildcard) VALUES
-  ('00000000-0000-0000-0005-000000000001', 'WH-000', 'Any warehouse (wildcard)', true),  -- [SAMPLE]
-  ('00000000-0000-0000-0005-000000000002', 'WH-001', 'Warehouse 001',            false), -- [SAMPLE]
-  ('00000000-0000-0000-0005-000000000003', 'WH-002', 'Warehouse 002',            false); -- [SAMPLE]
+INSERT INTO warehouses (id, code, name, is_wildcard, created_at, updated_at, created_by, updated_by, is_deleted) VALUES
+  ('00000000-0000-0000-0005-000000000001', 'WH-000', 'Any warehouse (wildcard)', TRUE,  NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0005-000000000002', 'WH-001', 'Warehouse 001',            FALSE, NOW(), NOW(), 'system', 'system', FALSE),  -- [SAMPLE]
+  ('00000000-0000-0000-0005-000000000003', 'WH-002', 'Warehouse 002',            FALSE, NOW(), NOW(), 'system', 'system', FALSE);  -- [SAMPLE]
 
 -- ---- prices ---------------------------------------------------------
 -- NULL order_type_id = base price (× percentage at runtime)
@@ -82,38 +82,38 @@ INSERT INTO prices (id, item_id, supplier_id, order_type_id, unit_price) VALUES
 
 -- ---- inventory  (remaining stock per supplier+warehouse+item) -------
 -- [INVENTED]. SP-002/WH-001/Item-1 = 200 vs a 300 request -> partial fill.
-INSERT INTO inventory (id, supplier_id, warehouse_id, item_id, remaining_quantity) VALUES
+INSERT INTO inventory (id, supplier_id, warehouse_id, item_id, remaining_quantity, created_at, updated_at, created_by, updated_by, is_deleted) VALUES
   ('00000000-0000-0000-0007-000000000001',
     '00000000-0000-0000-0004-000000000002', '00000000-0000-0000-0005-000000000002',  -- SP-001 WH-001
-    '00000000-0000-0000-0002-000000000001',  50.00),  -- Item-1
+    '00000000-0000-0000-0002-000000000001',  50.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-1
 
   ('00000000-0000-0000-0007-000000000002',
     '00000000-0000-0000-0004-000000000002', '00000000-0000-0000-0005-000000000003',  -- SP-001 WH-002
-    '00000000-0000-0000-0002-000000000001',  30.00),  -- Item-1
+    '00000000-0000-0000-0002-000000000001',  30.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-1
 
   ('00000000-0000-0000-0007-000000000003',
     '00000000-0000-0000-0004-000000000003', '00000000-0000-0000-0005-000000000002',  -- SP-002 WH-001
-    '00000000-0000-0000-0002-000000000001', 200.00),  -- Item-1 (shortage scenario)
+    '00000000-0000-0000-0002-000000000001', 200.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-1 (shortage scenario)
 
   ('00000000-0000-0000-0007-000000000004',
     '00000000-0000-0000-0004-000000000003', '00000000-0000-0000-0005-000000000003',  -- SP-002 WH-002
-    '00000000-0000-0000-0002-000000000001', 120.00),  -- Item-1
+    '00000000-0000-0000-0002-000000000001', 120.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-1
 
   ('00000000-0000-0000-0007-000000000005',
     '00000000-0000-0000-0004-000000000002', '00000000-0000-0000-0005-000000000002',  -- SP-001 WH-001
-    '00000000-0000-0000-0002-000000000002',  40.00),  -- Item-2
+    '00000000-0000-0000-0002-000000000002',  40.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-2
 
   ('00000000-0000-0000-0007-000000000006',
     '00000000-0000-0000-0004-000000000002', '00000000-0000-0000-0005-000000000003',  -- SP-001 WH-002
-    '00000000-0000-0000-0002-000000000002',  60.00),  -- Item-2
+    '00000000-0000-0000-0002-000000000002',  60.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-2
 
   ('00000000-0000-0000-0007-000000000007',
     '00000000-0000-0000-0004-000000000003', '00000000-0000-0000-0005-000000000002',  -- SP-002 WH-001
-    '00000000-0000-0000-0002-000000000002',  25.00),  -- Item-2
+    '00000000-0000-0000-0002-000000000002',  25.00, NOW(), NOW(), 'system', 'system', FALSE),  -- Item-2
 
   ('00000000-0000-0000-0007-000000000008',
     '00000000-0000-0000-0004-000000000003', '00000000-0000-0000-0005-000000000003',  -- SP-002 WH-002
-    '00000000-0000-0000-0002-000000000002',  80.00);  -- Item-2
+    '00000000-0000-0000-0002-000000000002',  80.00, NOW(), NOW(), 'system', 'system', FALSE);  -- Item-2
 
 -- ---- orders (header) ------------------------------------------------
 INSERT INTO orders (id, code, customer_id, remark) VALUES
