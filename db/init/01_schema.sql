@@ -9,14 +9,23 @@ CREATE TABLE customers (
   code         VARCHAR UNIQUE NOT NULL,
   name         VARCHAR,
   credit_limit DECIMAL(14,2) NOT NULL DEFAULT 0,
-  created_at   TIMESTAMP DEFAULT NOW()
+  created_at   TIMESTAMP     NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMP     NOT NULL DEFAULT NOW(),
+  created_by   VARCHAR,
+  updated_by   VARCHAR,
+  is_deleted   BOOLEAN       NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE items (
-  id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code VARCHAR UNIQUE NOT NULL,
-  name VARCHAR,
-  unit VARCHAR NOT NULL DEFAULT 'kg'
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code       VARCHAR UNIQUE NOT NULL,
+  name       VARCHAR,
+  unit       VARCHAR   NOT NULL DEFAULT 'kg',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by VARCHAR,
+  updated_by VARCHAR,
+  is_deleted BOOLEAN   NOT NULL DEFAULT FALSE
 );
 
 -- percentage = price-tier multiplier: EMERGENCY 125 / OVER_DUE 100 / DAILY 90
@@ -33,7 +42,11 @@ CREATE TABLE suppliers (
   code        VARCHAR UNIQUE NOT NULL,
   name        VARCHAR,
   is_wildcard BOOLEAN   NOT NULL DEFAULT FALSE,
-  created_at  TIMESTAMP DEFAULT NOW()
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR,
+  updated_by  VARCHAR,
+  is_deleted  BOOLEAN   NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE warehouses (
@@ -41,7 +54,11 @@ CREATE TABLE warehouses (
   code        VARCHAR UNIQUE NOT NULL,
   name        VARCHAR,
   is_wildcard BOOLEAN   NOT NULL DEFAULT FALSE,
-  created_at  TIMESTAMP DEFAULT NOW()
+  created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by  VARCHAR,
+  updated_by  VARCHAR,
+  is_deleted  BOOLEAN   NOT NULL DEFAULT FALSE
 );
 
 -- ---- Stock & pricing ------------------------------------------------
@@ -53,7 +70,11 @@ CREATE TABLE inventory (
   warehouse_id       UUID          NOT NULL REFERENCES warehouses(id),
   item_id            UUID          NOT NULL REFERENCES items(id),
   remaining_quantity DECIMAL(14,2) NOT NULL DEFAULT 0,
-  updated_at         TIMESTAMP DEFAULT NOW(),
+  created_at         TIMESTAMP     NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMP     NOT NULL DEFAULT NOW(),
+  created_by         VARCHAR,
+  updated_by         VARCHAR,
+  is_deleted         BOOLEAN       NOT NULL DEFAULT FALSE,
   UNIQUE (supplier_id, warehouse_id, item_id)
 );
 
@@ -120,3 +141,19 @@ CREATE TABLE allocations (
 
 CREATE INDEX idx_allocations_sub_order ON allocations(sub_order_id);
 CREATE INDEX idx_allocations_inventory ON allocations(inventory_id);
+
+-- ---- auto-update updated_at on every row update ----------------------
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_customers_updated_at   BEFORE UPDATE ON customers   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_items_updated_at       BEFORE UPDATE ON items       FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_suppliers_updated_at   BEFORE UPDATE ON suppliers   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_warehouses_updated_at  BEFORE UPDATE ON warehouses  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_inventory_updated_at   BEFORE UPDATE ON inventory   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
