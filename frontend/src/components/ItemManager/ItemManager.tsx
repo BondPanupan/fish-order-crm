@@ -129,7 +129,7 @@ export default function ItemManager() {
                 <input className={styles.input} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Item name" />
               </label>
               <label className={styles.label}>
-                Unit <span className={styles.required}>*</span>
+                <div>Unit <span className={styles.required}>*</span></div>
                 <input className={styles.input} value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))} placeholder="kg" required />
               </label>
               {formError && <div className={styles.errorBox}>{formError}</div>}
