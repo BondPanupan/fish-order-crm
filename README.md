@@ -148,7 +148,7 @@ POSTGRES_USER=fish_user
 POSTGRES_PASSWORD=your_strong_password
 POSTGRES_DB=fish_crm
 
-NEXT_PUBLIC_API_URL=http://fish-crm.saveurnote.com
+NEXT_PUBLIC_API_URL=https://fish-crm.saveurnote.com/api
 ```
 
 > When running services locally (outside Docker), change `@db:` to `@localhost:` in `DATABASE_URL` and `http://backend:` to `http://localhost:` in `API_URL`.
