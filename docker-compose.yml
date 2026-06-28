@@ -17,6 +17,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
   backend:
     build:
@@ -38,6 +42,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   frontend:
     build:
@@ -58,6 +66,10 @@ services:
       - ./frontend/next.config.ts:/app/next.config.ts
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
 volumes:
   postgres_data:
