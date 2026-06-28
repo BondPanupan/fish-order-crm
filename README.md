@@ -62,13 +62,13 @@ The first run automatically:
 
 | Service | URL |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://localhost:3001 |
+| Frontend | http://localhost:3002 |
+| Backend API | http://localhost:3003 |
 | PostgreSQL | localhost:5432 |
 
 **4. Open the app**
 
-Navigate to **http://localhost:3000** — the Orders overview loads immediately with seed data.
+Navigate to **http://localhost:3002** — the Orders overview loads immediately with seed data.
 
 **Stop services**
 
@@ -124,10 +124,10 @@ cp .env.example .env
 | `POSTGRES_DB` | docker-compose, DB | Database name |
 | `DATABASE_URL` | Backend (Prisma) | Full Postgres connection string — constructed from the three vars above |
 | `PORT` | Backend | NestJS listening port (default `3001`) |
-| `NEXT_PUBLIC_API_URL` | Frontend (browser) | API base URL as seen from the user's browser |
+| `NEXT_PUBLIC_API_URL` | Frontend (browser) | API base URL as seen from the user's browser — `http://localhost:3003` locally, domain URL on production |
 | `API_URL` | Frontend (server) | API base URL used by Next.js server-side calls — use the Docker service name inside Compose |
 
-**Example `.env` for Docker Compose (default):**
+**Example `.env` for local development (default):**
 
 ```env
 POSTGRES_USER=fish_user
@@ -137,8 +137,18 @@ POSTGRES_DB=fish_crm
 DATABASE_URL=postgresql://fish_user:fish_pass@db:5432/fish_crm
 PORT=3001
 
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:3003
 API_URL=http://backend:3001
+```
+
+**Example `.env` for production (VPS):**
+
+```env
+POSTGRES_USER=fish_user
+POSTGRES_PASSWORD=your_strong_password
+POSTGRES_DB=fish_crm
+
+NEXT_PUBLIC_API_URL=http://fish-crm.saveurnote.com
 ```
 
 > When running services locally (outside Docker), change `@db:` to `@localhost:` in `DATABASE_URL` and `http://backend:` to `http://localhost:` in `API_URL`.

@@ -32,7 +32,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       PORT: 3001
     ports:
-      - "3001:3001"
+      - "3003:3001"
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
@@ -54,11 +54,11 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
       API_URL: http://backend:3001
       HOSTNAME: 0.0.0.0
     ports:
-      - "3000:3000"
+      - "3002:3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
