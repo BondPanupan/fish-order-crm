@@ -23,6 +23,7 @@ services:
           memory: 256m
 
   backend:
+    image: fish-crm/backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -48,6 +49,7 @@ services:
           memory: 512m
 
   frontend:
+    image: fish-crm/frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
