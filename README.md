@@ -49,7 +49,7 @@ cp frontend/.env.example frontend/.env
 
 The default values work out of the box. Edit the files only if you need different credentials or ports.
 
-**3. Start all services**
+**3. Start all services (development)**
 
 ```bash
 docker compose up --build
@@ -76,6 +76,43 @@ Navigate to **http://localhost:3002** — the Orders overview loads immediately 
 docker compose down          # keep database volume
 docker compose down -v       # also wipe the database
 ```
+
+---
+
+## Production Deployment (VPS)
+
+Use `docker-compose.prod.yml` for production. It uses multi-stage production builds (no source volume mounts, production deps only).
+
+**1. Set environment variables**
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` — the critical variable is `NEXT_PUBLIC_API_URL` which is baked into the Next.js build at compile time:
+
+```env
+POSTGRES_USER=fish_user
+POSTGRES_PASSWORD=your_strong_password
+POSTGRES_DB=fish_crm
+
+NEXT_PUBLIC_API_URL=https://your-domain.com/api
+```
+
+**2. Build and start**
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+**3. Rebuild a single service** (without downtime on others)
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build backend
+docker compose -f docker-compose.prod.yml up -d --build frontend
+```
+
+**Note:** Database data is stored in the `postgres_data` volume. Re-building images does **not** affect existing data. Data is only lost if you run `docker compose down -v`.
 
 ---
 
@@ -161,7 +198,8 @@ NEXT_PUBLIC_API_URL=https://fish-crm.saveurnote.com/api
 fish-order-crm/
 │
 ├── .env.example                   # Environment variable template
-├── docker-compose.yml            # Orchestrates db / backend / frontend
+├── docker-compose.yml            # Development — hot reload, source volume mounts
+├── docker-compose.prod.yml       # Production — multi-stage builds, no volume mounts
 │
 ├── db/
 │   └── init/
