@@ -32,6 +32,7 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       PORT: 3001
+      NODE_OPTIONS: "--max-old-space-size=400"
     ports:
       - "3003:3001"
     volumes:
